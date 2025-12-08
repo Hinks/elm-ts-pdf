@@ -1,12 +1,14 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
-import Html exposing (button, div, text)
+import Bytes exposing (Bytes)
+import File.Download
+import Html exposing (button, div, input, li, text, ul)
 import Html.Attributes as Attr
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onInput)
 import Http
-import Json.Decode as Decode
+import Json.Encode as Encode
 import Url
 
 
@@ -14,32 +16,26 @@ import Url
 -- MODEL
 
 
+type alias Todo =
+    { id : Int
+    , text : String
+    , completed : Bool
+    }
+
+
 type alias Model =
-    { count : Int
+    { todos : List Todo
+    , nextId : Int
+    , newTodoText : String
     , key : Nav.Key
-    , appFromUrl : String
-    , apiResponse : Maybe String
+    , pdfGenerating : Bool
+    , pendingPdfBytes : Maybe Bytes
     }
 
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init _ url key =
-    ( Model 0 key (extractAppFromUrl url) Nothing, Cmd.none )
-
-
-extractAppFromUrl : Url.Url -> String
-extractAppFromUrl url =
-    let
-        pathSegments =
-            String.split "/" url.path
-                |> List.filter (\segment -> segment /= "")
-    in
-    case pathSegments of
-        "watch-app" :: appName :: _ ->
-            appName
-
-        _ ->
-            ""
+init _ _ key =
+    ( Model [] 1 "" key False Nothing, Cmd.none )
 
 
 
@@ -47,61 +43,102 @@ extractAppFromUrl url =
 
 
 type Msg
-    = Increment
-    | Decrement
+    = UpdateNewTodoText String
+    | AddTodo
+    | ToggleTodo Int
+    | DeleteTodo Int
+    | GeneratePdf
+    | PdfBytesReceived Bytes
+    | TimestampReceived String
+    | PdfReceived (Result Http.Error ())
     | UrlChanged Url.Url
-    | SendGreetRequest
-    | GotGreetResponse (Result Http.Error ApiResponse)
     | NoOp
-
-
-type alias ApiResponse =
-    { message : String
-    }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Increment ->
-            ( { model | count = model.count + 1 }, Cmd.none )
+        UpdateNewTodoText text ->
+            ( { model | newTodoText = text }, Cmd.none )
 
-        Decrement ->
-            ( { model | count = model.count - 1 }, Cmd.none )
+        AddTodo ->
+            if String.trim model.newTodoText == "" then
+                ( model, Cmd.none )
 
-        UrlChanged url ->
-            ( { model | appFromUrl = extractAppFromUrl url }, Cmd.none )
+            else
+                ( { model
+                    | todos =
+                        Todo model.nextId (String.trim model.newTodoText) False
+                            :: model.todos
+                    , nextId = model.nextId + 1
+                    , newTodoText = ""
+                  }
+                , Cmd.none
+                )
 
-        SendGreetRequest ->
-            ( model, sendGreetRequest )
+        ToggleTodo id ->
+            ( { model
+                | todos =
+                    List.map
+                        (\todo ->
+                            if todo.id == id then
+                                { todo | completed = not todo.completed }
 
-        GotGreetResponse (Ok response) ->
-            ( { model | apiResponse = Just response.message }, Cmd.none )
+                            else
+                                todo
+                        )
+                        model.todos
+              }
+            , Cmd.none
+            )
 
-        GotGreetResponse (Err _) ->
-            ( { model | apiResponse = Nothing }, Cmd.none )
+        DeleteTodo id ->
+            ( { model | todos = List.filter (\todo -> todo.id /= id) model.todos }
+            , Cmd.none
+            )
+
+        GeneratePdf ->
+            if List.isEmpty model.todos then
+                ( model, Cmd.none )
+
+            else
+                ( { model | pdfGenerating = True }
+                , generatePdfRequest model.todos
+                )
+
+        PdfBytesReceived bytes ->
+            -- Request timestamp from JavaScript, store bytes temporarily
+            ( { model | pendingPdfBytes = Just bytes }
+            , requestTimestampPort ()
+            )
+
+        TimestampReceived timestamp ->
+            case model.pendingPdfBytes of
+                Just bytes ->
+                    let
+                        filename =
+                            "todos-" ++ timestamp ++ ".pdf"
+                    in
+                    ( { model | pdfGenerating = False, pendingPdfBytes = Nothing }
+                    , File.Download.bytes filename "application/pdf" bytes
+                    )
+
+                Nothing ->
+                    ( { model | pdfGenerating = False }, Cmd.none )
+
+        PdfReceived (Ok _) ->
+            ( { model | pdfGenerating = False }, Cmd.none )
+
+        PdfReceived (Err _) ->
+            ( { model | pdfGenerating = False }
+            , Cmd.none
+            )
+
+        UrlChanged _ ->
+            ( model, Cmd.none )
 
         NoOp ->
             ( model, Cmd.none )
-
-
-sendGreetRequest : Cmd Msg
-sendGreetRequest =
-    Http.request
-        { method = "GET"
-        , headers = []
-        , url = "/api"
-        , body = Http.emptyBody
-        , expect = Http.expectJson GotGreetResponse apiResponseDecoder
-        , timeout = Nothing
-        , tracker = Nothing
-        }
-
-
-apiResponseDecoder : Decode.Decoder ApiResponse
-apiResponseDecoder =
-    Decode.map ApiResponse
-        (Decode.field "message" Decode.string)
 
 
 
@@ -110,23 +147,182 @@ apiResponseDecoder =
 
 view : Model -> Browser.Document Msg
 view model =
-    { title = "Counter App"
+    { title = "Todo App"
     , body =
         [ div [ Attr.class "container" ]
-            [ div [] [ text ("hi " ++ model.appFromUrl ++ " from elm") ]
-            , div [] [ text ("Count: " ++ String.fromInt model.count) ]
-            , button [ onClick Increment ] [ text "+" ]
-            , button [ onClick Decrement ] [ text "-" ]
-            , button [ onClick SendGreetRequest ] [ text "Send Greet Request!" ]
-            , case model.apiResponse of
-                Just message ->
-                    div [] [ text ("response from api: " ++ message) ]
+            [ div [] [ text "My Todo List" ]
+            , div []
+                [ input
+                    [ Attr.type_ "text"
+                    , Attr.placeholder "What needs to be done?"
+                    , Attr.value model.newTodoText
+                    , onInput UpdateNewTodoText
+                    , Attr.style "padding" "8px"
+                    , Attr.style "margin-right" "8px"
+                    , Attr.style "width" "300px"
+                    ]
+                    []
+                , button
+                    [ onClick AddTodo
+                    , Attr.style "padding" "8px 16px"
+                    ]
+                    [ text "Add Todo" ]
+                ]
+            , ul
+                [ Attr.style "list-style" "none"
+                , Attr.style "padding" "0"
+                , Attr.style "margin-top" "20px"
+                ]
+                (List.map (viewTodo model) model.todos)
+            , div
+                [ Attr.style "margin-top" "20px" ]
+                [ button
+                    [ onClick GeneratePdf
+                    , Attr.disabled (model.pdfGenerating || List.isEmpty model.todos)
+                    , Attr.style "padding" "10px 20px"
+                    , Attr.style "background-color" "#4CAF50"
+                    , Attr.style "color" "white"
+                    , Attr.style "border" "none"
+                    , Attr.style "cursor"
+                        (if model.pdfGenerating || List.isEmpty model.todos then
+                            "not-allowed"
 
-                Nothing ->
-                    div [] []
+                         else
+                            "pointer"
+                        )
+                    , Attr.style "font-size" "16px"
+                    ]
+                    [ text
+                        (if model.pdfGenerating then
+                            "Generating PDF..."
+
+                         else
+                            "Create PDF"
+                        )
+                    ]
+                ]
             ]
         ]
     }
+
+
+viewTodo : Model -> Todo -> Html.Html Msg
+viewTodo _ todo =
+    li
+        [ Attr.style "padding" "8px"
+        , Attr.style "margin-bottom" "8px"
+        , Attr.style "display" "flex"
+        , Attr.style "align-items" "center"
+        , Attr.style "background-color"
+            (if todo.completed then
+                "#f0f0f0"
+
+             else
+                "#fff"
+            )
+        ]
+        [ input
+            [ Attr.type_ "checkbox"
+            , Attr.checked todo.completed
+            , onClick (ToggleTodo todo.id)
+            , Attr.style "margin-right" "12px"
+            ]
+            []
+        , div
+            [ Attr.style "flex" "1"
+            , Attr.style "text-decoration"
+                (if todo.completed then
+                    "line-through"
+
+                 else
+                    "none"
+                )
+            , Attr.style "color"
+                (if todo.completed then
+                    "#999"
+
+                 else
+                    "#000"
+                )
+            ]
+            [ text todo.text ]
+        , button
+            [ onClick (DeleteTodo todo.id)
+            , Attr.style "padding" "4px 8px"
+            , Attr.style "margin-left" "8px"
+            , Attr.style "background-color" "#ff4444"
+            , Attr.style "color" "white"
+            , Attr.style "border" "none"
+            , Attr.style "cursor" "pointer"
+            ]
+            [ text "Delete" ]
+        ]
+
+
+
+-- HTTP
+
+
+todoEncoder : Todo -> Encode.Value
+todoEncoder todo =
+    Encode.object
+        [ ( "id", Encode.int todo.id )
+        , ( "text", Encode.string todo.text )
+        , ( "completed", Encode.bool todo.completed )
+        ]
+
+
+generatePdfRequest : List Todo -> Cmd Msg
+generatePdfRequest todos =
+    Http.request
+        { method = "POST"
+        , url = "/pdf"
+        , headers = []
+        , body =
+            Http.jsonBody
+                (Encode.object
+                    [ ( "todos", Encode.list todoEncoder todos )
+                    ]
+                )
+        , expect = Http.expectBytesResponse handlePdfResponse (resolve Ok)
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
+resolve : (Bytes -> Result String a) -> Http.Response Bytes -> Result Http.Error a
+resolve toResult response =
+    case response of
+        Http.BadUrl_ url_ ->
+            Err (Http.BadUrl url_)
+
+        Http.Timeout_ ->
+            Err Http.Timeout
+
+        Http.NetworkError_ ->
+            Err Http.NetworkError
+
+        Http.BadStatus_ metadata _ ->
+            Err (Http.BadStatus metadata.statusCode)
+
+        Http.GoodStatus_ _ body ->
+            Result.mapError Http.BadBody (toResult body)
+
+
+handlePdfResponse : Result Http.Error Bytes -> Msg
+handlePdfResponse result =
+    case result of
+        Ok bytes ->
+            PdfBytesReceived bytes
+
+        Err error ->
+            PdfReceived (Err error)
+
+
+port requestTimestampPort : () -> Cmd msg
+
+
+port timestampPort : (String -> msg) -> Sub msg
 
 
 
@@ -135,7 +331,7 @@ view model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    timestampPort TimestampReceived
 
 
 

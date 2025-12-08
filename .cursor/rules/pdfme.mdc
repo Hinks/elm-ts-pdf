@@ -1,0 +1,1504 @@
+---
+alwaysApply: false
+---
+
+# PDFme API Documentation
+
+## Introduction
+
+PDFme is a TypeScript-based PDF generation and manipulation library designed for both web browsers and Node.js environments. It provides a complete solution for creating PDFs from JSON templates, offering a WYSIWYG designer for template creation, interactive forms for data collection, and a viewer for displaying generated PDFs. The library is built on a plugin architecture that allows custom field types and supports dynamic content, expressions, and automatic page breaking for complex layouts.
+
+The core functionality revolves around three main components: `@pdfme/generator` for PDF creation, `@pdfme/ui` for browser-based interfaces (Designer, Form, Viewer), and `@pdfme/schemas` for field type plugins. Additional packages include `@pdfme/manipulator` for PDF operations (merge, split, rotate), `@pdfme/converter` for format conversions, and `@pdfme/common` for shared utilities and types. All components work together through a unified template structure that defines PDF layouts as JSON, making it easy to store, version, and dynamically generate documents.
+
+---
+
+## PDF Generation
+
+### Generate PDF from Template
+
+```typescript
+import { generate } from "@pdfme/generator";
+import { Template, Font } from "@pdfme/common";
+import { text, image, barcodes } from "@pdfme/schemas";
+import * as fs from "fs";
+
+// Define custom fonts
+const fonts: Font = {
+    NotoSerifJP: {
+        data: fs.readFileSync("./fonts/NotoSerifJP-Regular.otf"),
+        fallback: true,
+    },
+    Arial: {
+        data: fs.readFileSync("./fonts/Arial.ttf"),
+    },
+};
+
+// Create a template with blank PDF
+const template: Template = {
+    basePdf: {
+        width: 210,
+        height: 297,
+        padding: [10, 10, 10, 10],
+    },
+    schemas: [
+        [
+            {
+                name: "companyName",
+                type: "text",
+                position: { x: 20, y: 20 },
+                width: 170,
+                height: 10,
+                fontSize: 16,
+                fontName: "Arial",
+                alignment: "left",
+            },
+            {
+                name: "logo",
+                type: "image",
+                position: { x: 150, y: 15 },
+                width: 40,
+                height: 20,
+            },
+            {
+                name: "productCode",
+                type: "qrcode",
+                position: { x: 20, y: 50 },
+                width: 30,
+                height: 30,
+            },
+        ],
+    ],
+};
+
+// Input data for multiple PDFs
+const inputs = [
+    {
+        companyName: "Acme Corporation",
+        logo: "data:image/png;base64,iVBORw0KGg...",
+        productCode: "SKU-12345",
+    },
+    {
+        companyName: "Widget Industries",
+        logo: "data:image/png;base64,iVBORw0KGg...",
+        productCode: "SKU-67890",
+    },
+];
+
+// Generate PDF
+async function generateInvoices() {
+    try {
+        const pdf = await generate({
+            template,
+            inputs,
+            options: {
+                font: fonts,
+                colorType: "cmyk",
+                title: "Invoice Batch",
+                author: "PDFme System",
+            },
+            plugins: {
+                text,
+                image,
+                qrcode: barcodes,
+            },
+        });
+
+        fs.writeFileSync("output.pdf", pdf);
+        console.log("PDF generated successfully");
+    } catch (error) {
+        console.error("PDF generation failed:", error);
+    }
+}
+
+generateInvoices();
+```
+
+### Generate PDF with Custom Base PDF
+
+```typescript
+import { generate } from "@pdfme/generator";
+import { Template } from "@pdfme/common";
+import { text } from "@pdfme/schemas";
+import * as fs from "fs";
+
+// Use existing PDF as base
+const basePdfBuffer = fs.readFileSync("./template-form.pdf");
+
+const template: Template = {
+    basePdf: basePdfBuffer,
+    schemas: [
+        [
+            {
+                name: "customerName",
+                type: "text",
+                position: { x: 50, y: 80 },
+                width: 100,
+                height: 8,
+                fontSize: 12,
+            },
+            {
+                name: "date",
+                type: "text",
+                position: { x: 150, y: 80 },
+                width: 40,
+                height: 8,
+                fontSize: 12,
+            },
+        ],
+    ],
+};
+
+const inputs = [
+    {
+        customerName: "John Doe",
+        date: "2025-10-31",
+    },
+];
+
+async function fillFormPDF() {
+    const pdf = await generate({
+        template,
+        inputs,
+        plugins: { text },
+    });
+
+    fs.writeFileSync("filled-form.pdf", pdf);
+}
+
+fillFormPDF();
+```
+
+---
+
+## UI Components
+
+### Designer Component
+
+```typescript
+import { Designer } from "@pdfme/ui";
+import { Template, Font } from "@pdfme/common";
+import { text, image, barcodes, table } from "@pdfme/schemas";
+
+// Initialize fonts
+const font: Font = {
+    Roboto: {
+        data: await fetch("/fonts/Roboto-Regular.ttf").then((res) =>
+            res.arrayBuffer()
+        ),
+        fallback: true,
+    },
+};
+
+// Create blank template
+const template: Template = {
+    basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+    schemas: [],
+};
+
+// Initialize Designer
+const designer = new Designer({
+    domContainer: document.getElementById("designer-container")!,
+    template,
+    options: {
+        font,
+        lang: "en",
+        labels: {
+            "schemas.text.size": "Font Size",
+            "schemas.text.fontName": "Font Family",
+        },
+        theme: {
+            token: { colorPrimary: "#1890ff" },
+        },
+        icons: {
+            text: "<svg>...</svg>",
+        },
+    },
+    plugins: {
+        text,
+        image,
+        qrcode: barcodes,
+        table,
+    },
+});
+
+// Save template handler
+designer.onSaveTemplate((template: Template) => {
+    console.log("Template saved:", template);
+    localStorage.setItem("myTemplate", JSON.stringify(template));
+});
+
+// Update template programmatically
+designer.updateTemplate({
+    ...template,
+    schemas: [
+        [
+            {
+                name: "title",
+                type: "text",
+                position: { x: 20, y: 20 },
+                width: 170,
+                height: 15,
+            },
+        ],
+    ],
+});
+
+// Cleanup
+// designer.destroy();
+```
+
+### Form Component
+
+```typescript
+import { Form } from "@pdfme/ui";
+import { Template, Font } from "@pdfme/common";
+import { text, date, checkbox } from "@pdfme/schemas";
+
+const font: Font = {
+    Arial: {
+        data: await fetch("/fonts/Arial.ttf").then((res) => res.arrayBuffer()),
+        fallback: true,
+    },
+};
+
+const template: Template = {
+    basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+    schemas: [
+        [
+            {
+                name: "fullName",
+                type: "text",
+                position: { x: 20, y: 30 },
+                width: 80,
+                height: 10,
+                required: true,
+            },
+            {
+                name: "birthDate",
+                type: "date",
+                position: { x: 110, y: 30 },
+                width: 50,
+                height: 10,
+                format: "yyyy-MM-dd",
+            },
+            {
+                name: "terms",
+                type: "checkbox",
+                position: { x: 20, y: 50 },
+                width: 8,
+                height: 8,
+                required: true,
+            },
+        ],
+    ],
+};
+
+const inputs = [
+    {
+        fullName: "",
+        birthDate: "",
+        terms: "",
+    },
+];
+
+const form = new Form({
+    domContainer: document.getElementById("form-container")!,
+    template,
+    inputs,
+    options: { font, lang: "en" },
+    plugins: { text, date, checkbox },
+});
+
+// Listen for input changes
+form.onChangeInput((inputs) => {
+    console.log("Form data changed:", inputs);
+});
+
+// Get current inputs
+const currentInputs = form.getInputs();
+console.log("Current inputs:", currentInputs);
+
+// Update inputs programmatically
+form.updateInputs([
+    {
+        fullName: "Jane Smith",
+        birthDate: "1990-05-15",
+        terms: "true",
+    },
+]);
+```
+
+### Viewer Component
+
+```typescript
+import { Viewer } from "@pdfme/ui";
+import { Template, Font } from "@pdfme/common";
+import { text, image } from "@pdfme/schemas";
+
+const font: Font = {
+    Helvetica: {
+        data: await fetch("/fonts/Helvetica.ttf").then((res) =>
+            res.arrayBuffer()
+        ),
+        fallback: true,
+    },
+};
+
+const template: Template = {
+    basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+    schemas: [
+        [
+            {
+                name: "invoiceNumber",
+                type: "text",
+                position: { x: 150, y: 20 },
+                width: 40,
+                height: 8,
+                readOnly: true,
+                content: "INV-{invoiceId}",
+            },
+            {
+                name: "companyLogo",
+                type: "image",
+                position: { x: 20, y: 15 },
+                width: 40,
+                height: 15,
+            },
+        ],
+    ],
+};
+
+const inputs = [
+    {
+        invoiceId: "2025-001",
+        companyLogo: "data:image/png;base64,iVBORw0KGg...",
+    },
+];
+
+const viewer = new Viewer({
+    domContainer: document.getElementById("viewer-container")!,
+    template,
+    inputs,
+    options: {
+        font,
+        lang: "en",
+        zoomLevel: 1.2,
+    },
+    plugins: { text, image },
+});
+
+// Update displayed content
+viewer.updateInputs([
+    {
+        invoiceId: "2025-002",
+        companyLogo: "data:image/png;base64,iVBORw0KGg...",
+    },
+]);
+```
+
+---
+
+## Built-in Schemas
+
+### Text Schema
+
+```typescript
+import { text } from "@pdfme/schemas";
+import { generate } from "@pdfme/generator";
+import { Template } from "@pdfme/common";
+
+const template: Template = {
+    basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+    schemas: [
+        [
+            {
+                name: "heading",
+                type: "text",
+                position: { x: 20, y: 20 },
+                width: 170,
+                height: 15,
+                fontSize: 24,
+                fontName: "Arial",
+                fontColor: "#333333",
+                alignment: "center",
+                verticalAlignment: "middle",
+                lineHeight: 1.5,
+                characterSpacing: 0,
+                backgroundColor: "#f0f0f0",
+            },
+            {
+                name: "paragraph",
+                type: "text",
+                position: { x: 20, y: 40 },
+                width: 170,
+                height: 60,
+                fontSize: 12,
+                dynamicFontSize: { min: 8, max: 12, fit: "vertical" },
+            },
+        ],
+    ],
+};
+
+const inputs = [
+    {
+        heading: "Annual Report 2025",
+        paragraph:
+            "This is a long paragraph that will automatically adjust font size to fit the available space. The text will shrink if necessary but never go below 8pt or above 12pt.",
+    },
+];
+
+generate({
+    template,
+    inputs,
+    plugins: { text },
+});
+```
+
+### Table Schema
+
+```typescript
+import { table } from "@pdfme/schemas";
+import { generate } from "@pdfme/generator";
+import { Template } from "@pdfme/common";
+
+const template: Template = {
+    basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+    schemas: [
+        [
+            {
+                name: "orderItems",
+                type: "table",
+                position: { x: 20, y: 50 },
+                width: 170,
+                height: 100,
+                head: ["Item", "Quantity", "Price", "Total"],
+                headStyle: {
+                    fontName: "Arial",
+                    fontSize: 11,
+                    fontColor: "#ffffff",
+                    backgroundColor: "#2c3e50",
+                    alignment: "center",
+                },
+                bodyStyle: {
+                    fontName: "Arial",
+                    fontSize: 10,
+                    fontColor: "#000000",
+                    alignment: "left",
+                },
+                columnStyle: {
+                    0: { width: 70 },
+                    1: { width: 30, alignment: "center" },
+                    2: { width: 35, alignment: "right" },
+                    3: { width: 35, alignment: "right" },
+                },
+                alternateBackgroundColor: "#ecf0f1",
+                showHead: true,
+            },
+        ],
+    ],
+};
+
+const inputs = [
+    {
+        orderItems: JSON.stringify([
+            ["Widget A", "5", "$10.00", "$50.00"],
+            ["Widget B", "3", "$15.00", "$45.00"],
+            ["Widget C", "10", "$5.00", "$50.00"],
+            ["Shipping", "1", "$12.50", "$12.50"],
+        ]),
+    },
+];
+
+generate({
+    template,
+    inputs,
+    plugins: { table },
+});
+```
+
+### Barcode Schema
+
+```typescript
+import { barcodes } from "@pdfme/schemas";
+import { generate } from "@pdfme/generator";
+import { Template } from "@pdfme/common";
+
+const template: Template = {
+    basePdf: { width: 100, height: 60, padding: [5, 5, 5, 5] },
+    schemas: [
+        [
+            {
+                name: "productQR",
+                type: "qrcode",
+                position: { x: 10, y: 10 },
+                width: 30,
+                height: 30,
+            },
+            {
+                name: "sku",
+                type: "code128",
+                position: { x: 50, y: 15 },
+                width: 40,
+                height: 20,
+                barColor: "#000000",
+                includetext: true,
+            },
+            {
+                name: "ean",
+                type: "ean13",
+                position: { x: 10, y: 45 },
+                width: 40,
+                height: 10,
+            },
+        ],
+    ],
+};
+
+const inputs = [
+    {
+        productQR: "https://example.com/product/12345",
+        sku: "WIDGET-A-001",
+        ean: "1234567890123",
+    },
+];
+
+generate({
+    template,
+    inputs,
+    plugins: {
+        qrcode: barcodes,
+        code128: barcodes,
+        ean13: barcodes,
+    },
+});
+```
+
+### Date Schema
+
+```typescript
+import { date, time, dateTime } from "@pdfme/schemas";
+import { generate } from "@pdfme/generator";
+import { Template } from "@pdfme/common";
+
+const template: Template = {
+    basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+    schemas: [
+        [
+            {
+                name: "issueDate",
+                type: "date",
+                position: { x: 20, y: 20 },
+                width: 50,
+                height: 8,
+                format: "yyyy-MM-dd",
+                locale: "en-US",
+            },
+            {
+                name: "issueTime",
+                type: "time",
+                position: { x: 80, y: 20 },
+                width: 40,
+                height: 8,
+                format: "HH:mm:ss",
+            },
+            {
+                name: "timestamp",
+                type: "dateTime",
+                position: { x: 130, y: 20 },
+                width: 60,
+                height: 8,
+                format: "yyyy-MM-dd HH:mm",
+            },
+        ],
+    ],
+};
+
+const inputs = [
+    {
+        issueDate: "2025-10-31",
+        issueTime: "14:30:00",
+        timestamp: "2025-10-31T14:30:00",
+    },
+];
+
+generate({
+    template,
+    inputs,
+    plugins: { date, time, dateTime },
+});
+```
+
+### Multi-Variable Text
+
+```typescript
+import { multiVariableText } from "@pdfme/schemas";
+import { generate } from "@pdfme/generator";
+import { Template } from "@pdfme/common";
+
+const template: Template = {
+    basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+    schemas: [
+        [
+            {
+                name: "greeting",
+                type: "multiVariableText",
+                position: { x: 20, y: 30 },
+                width: 170,
+                height: 40,
+                content:
+                    "Dear {firstName} {lastName},\n\nThank you for your order #{orderId}.\nTotal amount: ${totalAmount}\n\nBest regards,\n{companyName}",
+                fontSize: 12,
+                variablesSampleData: JSON.stringify({
+                    firstName: "John",
+                    lastName: "Doe",
+                    orderId: "12345",
+                    totalAmount: "150.00",
+                    companyName: "Acme Corp",
+                }),
+            },
+        ],
+    ],
+};
+
+const inputs = [
+    {
+        firstName: "Jane",
+        lastName: "Smith",
+        orderId: "67890",
+        totalAmount: "299.99",
+        companyName: "Widget Industries",
+    },
+];
+
+generate({
+    template,
+    inputs,
+    plugins: { multiVariableText },
+});
+```
+
+### Checkbox Schema
+
+```typescript
+import { checkbox } from "@pdfme/schemas";
+import { generate } from "@pdfme/generator";
+import { Template } from "@pdfme/common";
+
+const template: Template = {
+    basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+    schemas: [
+        [
+            {
+                name: "agreeToTerms",
+                type: "checkbox",
+                position: { x: 20, y: 50 },
+                width: 8,
+                height: 8,
+                color: "#000000",
+            },
+            {
+                name: "subscribe",
+                type: "checkbox",
+                position: { x: 20, y: 65 },
+                width: 8,
+                height: 8,
+                color: "#0066cc",
+            },
+        ],
+    ],
+};
+
+const inputs = [
+    {
+        agreeToTerms: "true",
+        subscribe: "false",
+    },
+];
+
+generate({
+    template,
+    inputs,
+    plugins: { checkbox },
+});
+```
+
+### Select Schema
+
+```typescript
+import { select } from "@pdfme/schemas";
+import { generate } from "@pdfme/generator";
+import { Template } from "@pdfme/common";
+
+const template: Template = {
+    basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+    schemas: [
+        [
+            {
+                name: "country",
+                type: "select",
+                position: { x: 20, y: 40 },
+                width: 60,
+                height: 10,
+                options: ["USA", "Canada", "Mexico", "UK", "Germany"],
+                fontSize: 12,
+            },
+        ],
+    ],
+};
+
+const inputs = [
+    {
+        country: "USA",
+    },
+];
+
+generate({
+    template,
+    inputs,
+    plugins: { select },
+});
+```
+
+### Radio Group Schema
+
+```typescript
+import { radioGroup } from "@pdfme/schemas";
+import { generate } from "@pdfme/generator";
+import { Template } from "@pdfme/common";
+
+const template: Template = {
+    basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+    schemas: [
+        [
+            {
+                name: "paymentMethod_credit",
+                type: "radioGroup",
+                position: { x: 20, y: 50 },
+                width: 8,
+                height: 8,
+                group: "paymentMethod",
+                color: "#000000",
+            },
+            {
+                name: "paymentMethod_debit",
+                type: "radioGroup",
+                position: { x: 20, y: 65 },
+                width: 8,
+                height: 8,
+                group: "paymentMethod",
+                color: "#000000",
+            },
+            {
+                name: "paymentMethod_cash",
+                type: "radioGroup",
+                position: { x: 20, y: 80 },
+                width: 8,
+                height: 8,
+                group: "paymentMethod",
+                color: "#000000",
+            },
+        ],
+    ],
+};
+
+const inputs = [
+    {
+        paymentMethod_credit: "true",
+        paymentMethod_debit: "false",
+        paymentMethod_cash: "false",
+    },
+];
+
+generate({
+    template,
+    inputs,
+    plugins: { radioGroup },
+});
+```
+
+### SVG Schema
+
+```typescript
+import { svg } from "@pdfme/schemas";
+import { generate } from "@pdfme/generator";
+import { Template } from "@pdfme/common";
+
+const template: Template = {
+    basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+    schemas: [
+        [
+            {
+                name: "logo",
+                type: "svg",
+                position: { x: 20, y: 20 },
+                width: 50,
+                height: 50,
+            },
+        ],
+    ],
+};
+
+const inputs = [
+    {
+        logo: `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="40" fill="#ff6b6b" />
+      <text x="50" y="55" text-anchor="middle" fill="white" font-size="20">SVG</text>
+    </svg>`,
+    },
+];
+
+generate({
+    template,
+    inputs,
+    plugins: { svg },
+});
+```
+
+### Shape Schemas (Line, Rectangle, Ellipse)
+
+```typescript
+import { line, rectangle, ellipse } from "@pdfme/schemas";
+import { generate } from "@pdfme/generator";
+import { Template } from "@pdfme/common";
+
+const template: Template = {
+    basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+    schemas: [
+        [
+            {
+                name: "horizontalLine",
+                type: "line",
+                position: { x: 20, y: 50 },
+                width: 170,
+                height: 0.5,
+                color: "#000000",
+                readOnly: true,
+            },
+            {
+                name: "box",
+                type: "rectangle",
+                position: { x: 20, y: 70 },
+                width: 60,
+                height: 40,
+                borderColor: "#0066cc",
+                borderWidth: 2,
+                color: "#e6f2ff",
+                readOnly: true,
+            },
+            {
+                name: "circle",
+                type: "ellipse",
+                position: { x: 100, y: 70 },
+                width: 40,
+                height: 40,
+                borderColor: "#ff6b6b",
+                borderWidth: 2,
+                color: "#ffe6e6",
+                readOnly: true,
+            },
+        ],
+    ],
+};
+
+// Shapes typically don't need input data
+const inputs = [{}];
+
+generate({
+    template,
+    inputs,
+    plugins: { line, rectangle, ellipse },
+});
+```
+
+---
+
+## PDF Manipulation
+
+### Merge PDFs
+
+```typescript
+import { merge } from "@pdfme/manipulator";
+import * as fs from "fs";
+
+async function mergePDFs() {
+    const pdf1 = fs.readFileSync("./invoice1.pdf");
+    const pdf2 = fs.readFileSync("./invoice2.pdf");
+    const pdf3 = fs.readFileSync("./invoice3.pdf");
+
+    try {
+        const mergedPdf = await merge([pdf1, pdf2, pdf3]);
+        fs.writeFileSync("./merged-invoices.pdf", mergedPdf);
+        console.log("PDFs merged successfully");
+    } catch (error) {
+        console.error("Merge failed:", error);
+    }
+}
+
+mergePDFs();
+```
+
+### Split PDF
+
+```typescript
+import { split } from "@pdfme/manipulator";
+import * as fs from "fs";
+
+async function splitPDF() {
+    const pdf = fs.readFileSync("./document.pdf");
+
+    try {
+        // Split into multiple ranges
+        const parts = await split(pdf, [
+            { start: 0, end: 2 }, // Pages 1-3
+            { start: 3, end: 5 }, // Pages 4-6
+            { start: 6 }, // Pages 7 to end
+        ]);
+
+        parts.forEach((part, index) => {
+            fs.writeFileSync(`./part-${index + 1}.pdf`, part);
+        });
+
+        console.log("PDF split into", parts.length, "parts");
+    } catch (error) {
+        console.error("Split failed:", error);
+    }
+}
+
+splitPDF();
+```
+
+### Rotate PDF Pages
+
+```typescript
+import { rotate } from "@pdfme/manipulator";
+import * as fs from "fs";
+
+async function rotatePDF() {
+    const pdf = fs.readFileSync("./document.pdf");
+
+    try {
+        // Rotate specific pages by 90 degrees
+        const rotatedPdf = await rotate(pdf, 90, [0, 2, 4]);
+        fs.writeFileSync("./rotated-document.pdf", rotatedPdf);
+
+        // Rotate all pages by 180 degrees
+        const allRotated = await rotate(pdf, 180);
+        fs.writeFileSync("./all-rotated.pdf", allRotated);
+
+        console.log("PDF pages rotated successfully");
+    } catch (error) {
+        console.error("Rotation failed:", error);
+    }
+}
+
+rotatePDF();
+```
+
+### Remove Pages
+
+```typescript
+import { remove } from "@pdfme/manipulator";
+import * as fs from "fs";
+
+async function removePages() {
+    const pdf = fs.readFileSync("./document.pdf");
+
+    try {
+        // Remove pages at indices 1, 3, and 5 (pages 2, 4, and 6)
+        const modifiedPdf = await remove(pdf, [1, 3, 5]);
+        fs.writeFileSync("./modified-document.pdf", modifiedPdf);
+        console.log("Pages removed successfully");
+    } catch (error) {
+        console.error("Page removal failed:", error);
+    }
+}
+
+removePages();
+```
+
+### Insert Pages
+
+```typescript
+import { insert } from "@pdfme/manipulator";
+import * as fs from "fs";
+
+async function insertPages() {
+    const basePdf = fs.readFileSync("./main-document.pdf");
+    const coverPage = fs.readFileSync("./cover.pdf");
+    const appendix = fs.readFileSync("./appendix.pdf");
+
+    try {
+        // Insert cover at beginning, appendix at position 5
+        const modifiedPdf = await insert(basePdf, [
+            { pdf: coverPage, position: 0 },
+            { pdf: appendix, position: 5 },
+        ]);
+
+        fs.writeFileSync("./complete-document.pdf", modifiedPdf);
+        console.log("Pages inserted successfully");
+    } catch (error) {
+        console.error("Insert failed:", error);
+    }
+}
+
+insertPages();
+```
+
+### Organize PDF
+
+```typescript
+import { organize } from "@pdfme/manipulator";
+import * as fs from "fs";
+
+async function organizePDF() {
+    const pdf = fs.readFileSync("./document.pdf");
+    const newPage = fs.readFileSync("./new-page.pdf");
+
+    try {
+        const organizedPdf = await organize(pdf, [
+            { type: "move", data: { from: 0, to: 3 } },
+            { type: "remove", data: { position: 5 } },
+            { type: "insert", data: { pdf: newPage, position: 2 } },
+            { type: "rotate", data: { position: 1, degrees: 90 } },
+            { type: "replace", data: { pdf: newPage, position: 4 } },
+        ]);
+
+        fs.writeFileSync("./organized-document.pdf", organizedPdf);
+        console.log("PDF organized successfully");
+    } catch (error) {
+        console.error("Organization failed:", error);
+    }
+}
+
+organizePDF();
+```
+
+---
+
+## PDF Conversion
+
+### Convert PDF to Images
+
+```typescript
+import { pdf2img } from "@pdfme/converter";
+import * as fs from "fs";
+
+async function convertPDFToImages() {
+    const pdf = fs.readFileSync("./document.pdf");
+
+    try {
+        // Convert all pages to PNG images
+        const images = await pdf2img(pdf, {
+            scale: 2.0, // Higher resolution
+            pages: [0, 1, 2], // Convert first 3 pages only
+        });
+
+        images.forEach((imageBuffer, index) => {
+            fs.writeFileSync(
+                `./page-${index + 1}.png`,
+                Buffer.from(imageBuffer)
+            );
+        });
+
+        console.log(`Converted ${images.length} pages to images`);
+    } catch (error) {
+        console.error("Conversion failed:", error);
+    }
+}
+
+convertPDFToImages();
+```
+
+### Convert Image to PDF
+
+```typescript
+import { img2pdf } from "@pdfme/converter";
+import * as fs from "fs";
+
+async function convertImageToPDF() {
+    const image = fs.readFileSync("./photo.jpg");
+
+    try {
+        const pdf = await img2pdf([image], {
+            width: 210,
+            height: 297,
+            fit: "contain",
+        });
+
+        fs.writeFileSync("./photo.pdf", pdf);
+        console.log("Image converted to PDF successfully");
+    } catch (error) {
+        console.error("Conversion failed:", error);
+    }
+}
+
+convertImageToPDF();
+```
+
+### Get PDF Page Sizes
+
+```typescript
+import { pdf2size } from "@pdfme/converter";
+import * as fs from "fs";
+
+async function getPDFSizes() {
+    const pdf = fs.readFileSync("./document.pdf");
+
+    try {
+        const sizes = await pdf2size(pdf);
+
+        sizes.forEach((size, index) => {
+            console.log(`Page ${index + 1}:`, {
+                width: `${size.width}mm`,
+                height: `${size.height}mm`,
+            });
+        });
+    } catch (error) {
+        console.error("Failed to get sizes:", error);
+    }
+}
+
+getPDFSizes();
+```
+
+---
+
+## Custom Plugin Development
+
+### Create Custom Plugin
+
+```typescript
+import type {
+    Plugin,
+    PDFRenderProps,
+    UIRenderProps,
+    PropPanel,
+} from "@pdfme/common";
+import { z } from "zod";
+
+interface CustomSchema {
+    name: string;
+    type: string;
+    position: { x: number; y: number };
+    width: number;
+    height: number;
+    customProperty?: string;
+}
+
+// PDF rendering function
+const pdfRender = async (props: PDFRenderProps<CustomSchema>) => {
+    const { value, schema, pdfLib, page, options } = props;
+    const { PDFName, rgb } = pdfLib;
+
+    // Draw custom content on PDF
+    page.drawText(value, {
+        x: schema.position.x,
+        y: schema.position.y,
+        size: 12,
+        color: rgb(0, 0, 0),
+    });
+
+    // Access custom property
+    if (schema.customProperty) {
+        page.drawText(schema.customProperty, {
+            x: schema.position.x,
+            y: schema.position.y + 5,
+            size: 8,
+            color: rgb(0.5, 0.5, 0.5),
+        });
+    }
+};
+
+// UI rendering function
+const uiRender = async (props: UIRenderProps<CustomSchema>) => {
+    const { value, schema, mode, onChange, rootElement } = props;
+
+    // Create UI element
+    const div = document.createElement("div");
+    div.style.width = "100%";
+    div.style.height = "100%";
+    div.style.border = "1px solid #ccc";
+
+    if (mode === "viewer" || schema.readOnly) {
+        div.textContent = value;
+    } else {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = value;
+        input.style.width = "100%";
+        input.addEventListener("change", (e) => {
+            onChange &&
+                onChange({
+                    key: "content",
+                    value: (e.target as HTMLInputElement).value,
+                });
+        });
+        div.appendChild(input);
+    }
+
+    rootElement.appendChild(div);
+};
+
+// Property panel configuration
+const propPanel: PropPanel<CustomSchema> = {
+    defaultSchema: {
+        name: "",
+        type: "customField",
+        position: { x: 0, y: 0 },
+        width: 100,
+        height: 20,
+        customProperty: "default value",
+    },
+    schema: {
+        customProperty: {
+            title: "Custom Property",
+            type: "string",
+            widget: "input",
+            required: false,
+        },
+    },
+};
+
+// Export plugin
+export const customField: Plugin<CustomSchema> = {
+    pdf: pdfRender,
+    ui: uiRender,
+    propPanel,
+    icon: "<svg>...</svg>",
+};
+
+// Usage
+import { Designer } from "@pdfme/ui";
+import { generate } from "@pdfme/generator";
+
+const designer = new Designer({
+    domContainer: document.getElementById("designer")!,
+    template: {
+        basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+        schemas: [],
+    },
+    plugins: { customField },
+});
+
+const pdf = await generate({
+    template: {
+        basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+        schemas: [
+            [
+                {
+                    name: "field1",
+                    type: "customField",
+                    position: { x: 10, y: 10 },
+                    width: 100,
+                    height: 20,
+                },
+            ],
+        ],
+    },
+    inputs: [{ field1: "Hello World" }],
+    plugins: { customField },
+});
+```
+
+---
+
+## Utility Functions
+
+### Template Validation and Helpers
+
+```typescript
+import {
+    checkTemplate,
+    checkFont,
+    checkInputs,
+    getInputFromTemplate,
+    mm2pt,
+    pt2mm,
+    pt2px,
+    px2mm,
+    cloneDeep,
+    isBlankPdf,
+} from "@pdfme/common";
+import type { Template, Font } from "@pdfme/common";
+
+// Validate template
+try {
+    const template: Template = {
+        basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+        schemas: [
+            [
+                {
+                    name: "field1",
+                    type: "text",
+                    position: { x: 10, y: 10 },
+                    width: 50,
+                    height: 10,
+                },
+            ],
+        ],
+    };
+
+    checkTemplate(template);
+    console.log("Template is valid");
+} catch (error) {
+    console.error("Invalid template:", error);
+}
+
+// Validate font
+const font: Font = {
+    Arial: {
+        data: new Uint8Array(),
+        fallback: true,
+    },
+};
+
+try {
+    checkFont(font);
+    console.log("Font is valid");
+} catch (error) {
+    console.error("Invalid font:", error);
+}
+
+// Get input structure from template
+const template: Template = {
+    basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+    schemas: [
+        [
+            {
+                name: "firstName",
+                type: "text",
+                position: { x: 10, y: 10 },
+                width: 50,
+                height: 10,
+            },
+            {
+                name: "lastName",
+                type: "text",
+                position: { x: 70, y: 10 },
+                width: 50,
+                height: 10,
+            },
+        ],
+    ],
+};
+
+const emptyInput = getInputFromTemplate(template);
+// Returns: { firstName: '', lastName: '' }
+
+// Unit conversions
+const millimeters = 210;
+const points = mm2pt(millimeters); // Convert mm to points
+const backToMm = pt2mm(points); // Convert points to mm
+const pixels = pt2px(points); // Convert points to pixels
+const mmFromPx = px2mm(pixels); // Convert pixels to mm
+
+console.log({ millimeters, points, backToMm, pixels, mmFromPx });
+
+// Deep clone template
+const originalTemplate: Template = {
+    basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+    schemas: [
+        [
+            {
+                name: "field1",
+                type: "text",
+                position: { x: 10, y: 10 },
+                width: 50,
+                height: 10,
+            },
+        ],
+    ],
+};
+
+const clonedTemplate = cloneDeep(originalTemplate);
+clonedTemplate.schemas[0][0].name = "modifiedField";
+// originalTemplate is unchanged
+
+// Check if basePdf is blank
+const isBlank = isBlankPdf(template.basePdf);
+console.log("Is blank PDF:", isBlank); // true
+```
+
+### Dynamic Template with Expressions
+
+```typescript
+import { getDynamicTemplate, replacePlaceholders } from "@pdfme/common";
+import { Template } from "@pdfme/common";
+
+const template: Template = {
+    basePdf: { width: 210, height: 297, padding: [10, 10, 10, 10] },
+    schemas: [
+        [
+            {
+                name: "invoiceNumber",
+                type: "text",
+                position: { x: 150, y: 20 },
+                width: 40,
+                height: 8,
+                readOnly: true,
+                content: "INV-{year}-{number}",
+            },
+            {
+                name: "total",
+                type: "text",
+                position: { x: 150, y: 30 },
+                width: 40,
+                height: 8,
+                readOnly: true,
+                content: "${amount * 1.1}",
+            },
+            {
+                name: "pageInfo",
+                type: "text",
+                position: { x: 180, y: 280 },
+                width: 20,
+                height: 5,
+                readOnly: true,
+                content: "Page {currentPage} of {totalPages}",
+            },
+        ],
+    ],
+};
+
+const input = {
+    year: "2025",
+    number: "001",
+    amount: 100,
+};
+
+// Replace placeholders manually
+const schemas = template.schemas;
+const replaced = replacePlaceholders({
+    content: "INV-{year}-{number}",
+    variables: { ...input, currentPage: 1, totalPages: 1 },
+    schemas: schemas,
+});
+console.log(replaced); // "INV-2025-001"
+
+// Get dynamic template (for tables that expand)
+async function generateDynamicPDF() {
+    const dynamicTemplate = await getDynamicTemplate({
+        template,
+        input,
+        options: {},
+        _cache: new Map(),
+        getDynamicHeights: async (value, args) => {
+            // Custom logic for dynamic height calculation
+            return [args.schema.height];
+        },
+    });
+
+    // Use dynamicTemplate for generation
+    console.log("Dynamic template created:", dynamicTemplate);
+}
+
+generateDynamicPDF();
+```
+
+---
+
+## Summary
+
+PDFme provides a comprehensive solution for PDF generation and manipulation with a strong focus on developer experience and flexibility. The library's primary use cases include invoice and document generation from templates, interactive form filling, dynamic report creation with tables and charts, certificate and label printing, and PDF workflow automation. Its plugin-based architecture allows developers to create custom field types while leveraging built-in schemas for common elements like text, images, barcodes, tables, checkboxes, select dropdowns, radio groups, SVG graphics, and shapes (lines, rectangles, ellipses).
+
+Integration patterns are straightforward across different environments: use `@pdfme/generator` for server-side Node.js PDF generation, `@pdfme/ui` components for browser-based template design and form filling, `@pdfme/manipulator` for PDF operations like merging and splitting, and `@pdfme/converter` for format conversions. Templates are JSON-based, making them easy to store in databases, version control, or load dynamically from APIs. The library's TypeScript foundation ensures type safety throughout, while its support for custom fonts, dynamic content with expressions, automatic page breaking, and extensive schema collection (including form controls like checkboxes, select, and radio groups, as well as shapes and SVG graphics) makes it suitable for both simple and complex document generation requirements.

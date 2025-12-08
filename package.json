@@ -17,6 +17,9 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "@pdfme/common": "^5.5.7",
+        "@pdfme/generator": "^5.5.7",
+        "@pdfme/schemas": "^5.5.7",
         "express": "^5.1.0"
     },
     "devDependencies": {
