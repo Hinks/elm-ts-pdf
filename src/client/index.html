@@ -13,20 +13,6 @@
         <script>
             const app = document.getElementById("app");
             const elmApp = Elm.Main.init({ node: app, flags: null });
-
-            // Handle timestamp request port
-            elmApp.ports.requestTimestampPort.subscribe(function () {
-                // Generate timestamp in format: YYYY-MM-DD-HHMMSS
-                const now = new Date();
-                const timestamp = now
-                    .toISOString()
-                    .replace(/T/, "-")
-                    .replace(/:/g, "")
-                    .split(".")[0];
-
-                // Send timestamp back to Elm
-                elmApp.ports.timestampPort.send(timestamp);
-            });
         </script>
     </body>
 </html>

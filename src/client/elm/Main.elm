@@ -1,4 +1,4 @@
-port module Main exposing (main)
+module Main exposing (main)
 
 import Browser
 import Browser.Navigation as Nav
@@ -9,6 +9,8 @@ import Html.Attributes as Attr
 import Html.Events exposing (onClick, onInput)
 import Http
 import Json.Encode as Encode
+import Task
+import Time
 import Url
 
 
@@ -49,7 +51,7 @@ type Msg
     | DeleteTodo Int
     | GeneratePdf
     | PdfBytesReceived Bytes
-    | TimestampReceived String
+    | TimestampReceived Time.Posix
     | PdfReceived (Result Http.Error ())
     | UrlChanged Url.Url
     | NoOp
@@ -107,15 +109,18 @@ update msg model =
                 )
 
         PdfBytesReceived bytes ->
-            -- Request timestamp from JavaScript, store bytes temporarily
+            -- Get current time and store bytes temporarily
             ( { model | pendingPdfBytes = Just bytes }
-            , requestTimestampPort ()
+            , Task.perform TimestampReceived Time.now
             )
 
-        TimestampReceived timestamp ->
+        TimestampReceived posix ->
             case model.pendingPdfBytes of
                 Just bytes ->
                     let
+                        timestamp =
+                            formatTimestamp posix
+
                         filename =
                             "todos-" ++ timestamp ++ ".pdf"
                     in
@@ -319,10 +324,72 @@ handlePdfResponse result =
             PdfReceived (Err error)
 
 
-port requestTimestampPort : () -> Cmd msg
+
+-- TIMESTAMP FORMATTING
 
 
-port timestampPort : (String -> msg) -> Sub msg
+formatTimestamp : Time.Posix -> String
+formatTimestamp posix =
+    let
+        year =
+            String.fromInt (Time.toYear Time.utc posix)
+
+        month =
+            String.padLeft 2 '0' (String.fromInt (Time.toMonth Time.utc posix |> monthToInt))
+
+        day =
+            String.padLeft 2 '0' (String.fromInt (Time.toDay Time.utc posix))
+
+        hour =
+            String.padLeft 2 '0' (String.fromInt (Time.toHour Time.utc posix))
+
+        minute =
+            String.padLeft 2 '0' (String.fromInt (Time.toMinute Time.utc posix))
+
+        second =
+            String.padLeft 2 '0' (String.fromInt (Time.toSecond Time.utc posix))
+    in
+    year ++ "-" ++ month ++ "-" ++ day ++ "-" ++ hour ++ minute ++ second
+
+
+monthToInt : Time.Month -> Int
+monthToInt month =
+    case month of
+        Time.Jan ->
+            1
+
+        Time.Feb ->
+            2
+
+        Time.Mar ->
+            3
+
+        Time.Apr ->
+            4
+
+        Time.May ->
+            5
+
+        Time.Jun ->
+            6
+
+        Time.Jul ->
+            7
+
+        Time.Aug ->
+            8
+
+        Time.Sep ->
+            9
+
+        Time.Oct ->
+            10
+
+        Time.Nov ->
+            11
+
+        Time.Dec ->
+            12
 
 
 
@@ -331,7 +398,7 @@ port timestampPort : (String -> msg) -> Sub msg
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    timestampPort TimestampReceived
+    Sub.none
 
 
 
