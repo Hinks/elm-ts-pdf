@@ -1,0 +1,1902 @@
+---
+alwaysApply: false
+---
+
+### JavaScript Example for Image-Based Test Configuration
+
+Source: https://www.chartjs.org/docs/latest/developers/contributing
+
+An example JavaScript file demonstrating how to define chart configuration and generation options for image-based tests. This allows for programmatic setup of test scenarios.
+
+```javascript
+import { Chart, registerables } from "chart.js";
+Chart.register(...registerables);
+
+const config = {
+    type: "line",
+    data: {
+        labels: ["Jan", "Feb", "Mar"],
+        datasets: [
+            {
+                label: "My Dataset",
+                data: [10, 5, 15],
+                borderColor: "rgb(75, 192, 192)",
+                tension: 0.1,
+            },
+        ],
+    },
+    options: {
+        plugins: {
+            legend: {
+                display: false,
+            },
+        },
+        scales: {
+            x: {
+                display: false,
+            },
+            y: {
+                display: false,
+            },
+        },
+    },
+};
+
+// In a test file, you would typically use this config to generate a canvas
+// const canvas = document.createElement('canvas');
+// new Chart(canvas, config);
+// Then compare the canvas output to an expected image.
+```
+
+---
+
+### Quick Start with Bundlers (Webpack, Rollup)
+
+Source: https://www.chartjs.org/docs/latest/getting-started/integration
+
+This example shows the quickest way to integrate Chart.js with module bundlers like Webpack or Rollup. It imports the entire library using 'chart.js/auto', ensuring all features are available, but may lead to larger bundle sizes. No specific dependencies are needed beyond the Chart.js package.
+
+```javascript
+import Chart from "chart.js/auto";
+```
+
+---
+
+### Include Chart.js Library from CDN
+
+Source: https://www.chartjs.org/docs/latest/getting-started
+
+This snippet shows how to include the Chart.js library in your web page using a Content Delivery Network (CDN). This makes the Chart.js functionalities available for use in your JavaScript code.
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+```
+
+---
+
+### Create and Render a Bar Chart with Chart.js
+
+Source: https://www.chartjs.org/docs/latest/getting-started
+
+This snippet demonstrates how to create a basic bar chart using Chart.js. It requires an HTML canvas element and includes the Chart.js library via CDN. The output is a visual bar chart rendered on the specified canvas.
+
+```html
+<div>
+    <canvas id="myChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const ctx = document.getElementById("myChart");
+
+    new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
+            datasets: [
+                {
+                    label: "# of Votes",
+                    data: [12, 19, 3, 5, 2, 3],
+                    borderWidth: 1,
+                },
+            ],
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                },
+            },
+        },
+    });
+</script>
+```
+
+---
+
+### HTML Canvas Element for Chart.js
+
+Source: https://www.chartjs.org/docs/latest/getting-started
+
+This code provides the necessary HTML structure to host a Chart.js chart. It defines a canvas element with a specific ID, which will be targeted by the JavaScript code to render the chart.
+
+```html
+<div>
+    <canvas id="myChart"></canvas>
+</div>
+```
+
+---
+
+### Loading Chart.js with RequireJS (UMD Build)
+
+Source: https://www.chartjs.org/docs/latest/getting-started/integration
+
+This demonstrates how to load Chart.js using RequireJS, specifically targeting the UMD build (`chart.umd.min.js`). RequireJS can only load AMD modules, making the UMD build compatible. The example shows a basic instantiation of a chart.
+
+```javascript
+require(['path/to/chartjs/dist/chart.umd.min.js'], function(Chart){
+    const myChart = new Chart(ctx, {...});
+});
+```
+
+---
+
+### RequireJS with Date Adapter and Moment.js
+
+Source: https://www.chartjs.org/docs/latest/getting-started/integration
+
+This RequireJS example shows how to load Chart.js along with a date adapter (e.g., `chartjs-adapter-moment`) and its corresponding date library (e.g., `moment.js`). It uses nested requires to ensure dependencies are loaded in the correct order, which is crucial for the time scale functionality.
+
+```javascript
+require(['chartjs'], function(Chart) {
+    require(['moment'], function() {
+        require(['chartjs-adapter-moment'], function() {
+            new Chart(ctx, {...});
+        });
+    });
+});
+```
+
+---
+
+### Run Chart.js Documentation Server
+
+Source: https://www.chartjs.org/docs/latest/developers/contributing
+
+Starts a local development server for the Chart.js documentation, which is managed using Vuepress. This command allows developers to preview documentation changes in real-time.
+
+```bash
+pnpm run docs:dev
+```
+
+---
+
+### Chart.js Bar Chart Initialization
+
+Source: https://www.chartjs.org/docs/latest/getting-started
+
+This JavaScript code initializes a new Chart.js instance to create a bar chart. It targets a canvas element, specifies the chart type as 'bar', and defines the data, including labels and dataset values, along with basic options for the y-axis.
+
+```javascript
+const ctx = document.getElementById("myChart");
+
+new Chart(ctx, {
+    type: "bar",
+    data: {
+        labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
+        datasets: [
+            {
+                label: "# of Votes",
+                data: [12, 19, 3, 5, 2, 3],
+                borderWidth: 1,
+            },
+        ],
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true,
+            },
+        },
+    },
+});
+```
+
+---
+
+### Chart.js Utility Methods: describe and get
+
+Source: https://www.chartjs.org/docs/latest/api/interfaces/Defaults
+
+Provides documentation for the `describe` and `get` utility methods available in Chart.js. `get` retrieves configuration based on a scope, while `describe` is used for defining or describing configuration values within a scope.
+
+```typescript
+/**
+ * Retrieves configuration values for a given scope.
+ * @param scope - The string identifier for the configuration scope.
+ * @returns An object containing the configuration values for the specified scope.
+ */
+export declare function get(scope: string): AnyObject;
+
+/**
+ * Describes or defines configuration values within a given scope.
+ * @param scope - The string identifier for the configuration scope.
+ * @param values - An object containing the configuration values to describe.
+ * @returns An object representing the described configuration.
+ */
+export declare function describe(scope: string, values: AnyObject): AnyObject;
+```
+
+---
+
+### JavaScript Chart.js Dataset Configuration Example
+
+Source: https://www.chartjs.org/docs/latest/charts/bar
+
+Provides an example of configuring specific dataset properties for a Chart.js bar chart, including bar percentage, bar thickness, maximum bar thickness, minimum bar length, and the data array.
+
+```javascript
+data: {
+    datasets: [
+        {
+            barPercentage: 0.5,
+            barThickness: 6,
+            maxBarThickness: 8,
+            minBarLength: 2,
+            data: [10, 20, 30, 40, 50, 60, 70],
+        },
+    ];
+}
+```
+
+---
+
+### Chart Configuration for Image-Based Tests (JSON Example)
+
+Source: https://www.chartjs.org/docs/latest/developers/contributing
+
+An example of a JSON file defining chart configuration and generation options for image-based tests in Chart.js. This format is used to create visual regression tests for chart rendering.
+
+```json
+{
+    "type": "bar",
+    "data": {
+        "labels": ["January", "February", "March", "April"],
+        "datasets": [
+            {
+                "label": "Dataset 1",
+                "backgroundColor": "#41B883",
+                "data": [10, 20, 30, 40]
+            }
+        ]
+    },
+    "options": {
+        "responsive": true,
+        "maintainAspectRatio": false,
+        "plugins": {
+            "legend": {
+                "display": false
+            },
+            "tooltip": {
+                "enabled": false
+            }
+        },
+        "scales": {
+            "x": {
+                "display": false
+            },
+            "y": {
+                "display": false
+            }
+        }
+    }
+}
+```
+
+---
+
+### Scriptable Options Example - Chart.js
+
+Source: https://www.chartjs.org/docs/latest/general/options
+
+Demonstrates how to use scriptable options in Chart.js, which accept functions to dynamically determine option values based on context. The example shows how to set color based on data value and alternate colors, and how to resolve another scriptable option.
+
+```javascript
+color: function(context) {
+    const index = context.dataIndex;
+    const value = context.dataset.data[index];
+    return value < 0 ? 'red' :
+        index % 2 ? 'blue' :
+        'green';
+},
+borderColor: function(context, options) {
+    const color = options.color;
+    return Chart.helpers.color(color).lighten(0.2);
+}
+```
+
+---
+
+### Setup Data for Chart.js Polar Area Chart
+
+Source: https://www.chartjs.org/docs/latest/samples/other-charts/polar-area
+
+Sets up the data structure for a Chart.js Polar Area Chart. It includes defining labels, dataset count, and generating random data and background colors. This code relies on a 'Utils' object for data generation and color manipulation, which must be available in the scope.
+
+```javascript
+const DATA_COUNT = 5;
+const NUMBER_CFG = { count: DATA_COUNT, min: 0, max: 100 };
+
+const labels = ["Red", "Orange", "Yellow", "Green", "Blue"];
+const data = {
+    labels: labels,
+    datasets: [
+        {
+            label: "Dataset 1",
+            data: Utils.numbers(NUMBER_CFG),
+            backgroundColor: [
+                Utils.transparentize(Utils.CHART_COLORS.red, 0.5),
+                Utils.transparentize(Utils.CHART_COLORS.orange, 0.5),
+                Utils.transparentize(Utils.CHART_COLORS.yellow, 0.5),
+                Utils.transparentize(Utils.CHART_COLORS.green, 0.5),
+                Utils.transparentize(Utils.CHART_COLORS.blue, 0.5),
+            ],
+        },
+    ],
+};
+```
+
+---
+
+### Install Development Dependencies with pnpm
+
+Source: https://www.chartjs.org/docs/latest/developers/contributing
+
+Installs the necessary local development dependencies for Chart.js using the pnpm package manager. Ensure Node.js and pnpm are installed before running.
+
+```bash
+pnpm install
+```
+
+---
+
+### Optimized Bundle with Bundlers (Webpack, Rollup)
+
+Source: https://www.chartjs.org/docs/latest/getting-started/integration
+
+For bundle size optimization, this approach requires explicitly importing and registering only the necessary Chart.js components (controllers, elements, scales, plugins). This example illustrates importing specific chart types and scales. It assumes familiarity with module import syntax and the Chart.js component structure.
+
+```javascript
+import { Chart, BarController, CategoryScale, LinearScale, BarElement } from 'chart.js';
+
+Chart.register(BarController, CategoryScale, LinearScale, BarElement);
+
+const myChart = new Chart(ctx, {...});
+```
+
+---
+
+### Using Chart.js Helpers with Bundlers
+
+Source: https://www.chartjs.org/docs/latest/getting-started/integration
+
+This snippet demonstrates how to utilize Chart.js helper functions, such as `getRelativePosition`, within a module bundler setup. It requires importing both the Chart object and the specific helper function from 'chart.js/helpers'. The example shows how to get canvas position relative to an event.
+
+```javascript
+import Chart from "chart.js/auto";
+import { getRelativePosition } from "chart.js/helpers";
+
+const chart = new Chart(ctx, {
+    type: "line",
+    data: data,
+    options: {
+        onClick: (e) => {
+            const canvasPosition = getRelativePosition(e, chart);
+
+            // Substitute the appropriate scale IDs
+            const dataX = chart.scales.x.getValueForPixel(canvasPosition.x);
+            const dataY = chart.scales.y.getValueForPixel(canvasPosition.y);
+        },
+    },
+});
+```
+
+---
+
+### Setup Data for Chart.js Chart
+
+Source: https://www.chartjs.org/docs/latest/samples/bar/horizontal
+
+Defines the data structure for a Chart.js chart, including labels and datasets. This example creates two datasets with random data, specifying colors for borders and backgrounds. It utilizes utility functions like `Utils.months`, `Utils.numbers`, and `Utils.transparentize` for data generation and styling.
+
+```javascript
+const DATA_COUNT = 7;
+const NUMBER_CFG = { count: DATA_COUNT, min: -100, max: 100 };
+
+const labels = Utils.months({ count: 7 });
+const data = {
+    labels: labels,
+    datasets: [
+        {
+            label: "Dataset 1",
+            data: Utils.numbers(NUMBER_CFG),
+            borderColor: Utils.CHART_COLORS.red,
+            backgroundColor: Utils.transparentize(Utils.CHART_COLORS.red, 0.5),
+        },
+        {
+            label: "Dataset 2",
+            data: Utils.numbers(NUMBER_CFG),
+            borderColor: Utils.CHART_COLORS.blue,
+            backgroundColor: Utils.transparentize(Utils.CHART_COLORS.blue, 0.5),
+        },
+    ],
+};
+```
+
+---
+
+### Configure Chart.js Combo Chart with Time Scale
+
+Source: https://www.chartjs.org/docs/latest/samples/scales/time-combo
+
+Defines the configuration for a Chart.js combo chart. It sets the chart type to 'line' and configures the x-axis as a 'time' scale with daily units. This setup is essential for time-series data visualization.
+
+```javascript
+const config = {
+    type: "line",
+    data: data,
+    options: {
+        plugins: {
+            title: {
+                text: "Chart.js Combo Time Scale",
+                display: true,
+            },
+        },
+        scales: {
+            x: {
+                type: "time",
+                display: true,
+                offset: true,
+                ticks: {
+                    source: "data",
+                },
+                time: {
+                    unit: "day",
+                },
+            },
+        },
+    },
+};
+```
+
+---
+
+### Chart.js Floating Bar Chart Data Generation
+
+Source: https://www.chartjs.org/docs/latest/samples/bar/floating
+
+Generates sample data for a floating bar chart. Each data point is an array of two numbers representing the start and end of the bar. Includes utility functions for random number generation and month labels.
+
+```javascript
+const DATA_COUNT = 7;
+const NUMBER_CFG = { count: DATA_COUNT, min: -100, max: 100 };
+
+const labels = Utils.months({ count: 7 });
+const data = {
+    labels: labels,
+    datasets: [
+        {
+            label: "Dataset 1",
+            data: labels.map(() => {
+                return [Utils.rand(-100, 100), Utils.rand(-100, 100)];
+            }),
+            backgroundColor: Utils.CHART_COLORS.red,
+        },
+        {
+            label: "Dataset 2",
+            data: labels.map(() => {
+                return [Utils.rand(-100, 100), Utils.rand(-100, 100)];
+            }),
+            backgroundColor: Utils.CHART_COLORS.blue,
+        },
+    ],
+};
+```
+
+---
+
+### Chart.js Basic Legend Configuration Example
+
+Source: https://www.chartjs.org/docs/latest/configuration/legend
+
+Demonstrates how to enable the legend and set a specific color for all legend text labels. This configuration is part of the chart options.
+
+```javascript
+const chart = new Chart(ctx, {
+    type: "bar",
+    data: data,
+    options: {
+        plugins: {
+            legend: {
+                display: true,
+                labels: {
+                    color: "rgb(255, 99, 132)",
+                },
+            },
+        },
+    },
+});
+```
+
+---
+
+### Registering the Chart.js Colors Plugin
+
+Source: https://www.chartjs.org/docs/latest/general/colors
+
+Illustrates how to import and register the built-in `Colors` plugin for Chart.js. This plugin automatically cycles through a predefined palette of brand colors for datasets.
+
+```javascript
+import { Colors } from "chart.js";
+
+Chart.register(Colors);
+```
+
+---
+
+### Chart.js v3 Controller Element Update with updateElement
+
+Source: https://www.chartjs.org/docs/latest/getting-started/v3-migration
+
+Chart.js v3 suggests using the `updateElement` method when building elements in a controller. This method, along with `getSharedOptions` and `includeOptions`, aids in providing element properties and optimizing computations. Refer to Chart.js-provided controllers for examples.
+
+```javascript
+function updateElement(element, index, properties, mode) {
+    // ... implementation details
+}
+```
+
+---
+
+### Dynamic Import with CommonJS
+
+Source: https://www.chartjs.org/docs/latest/getting-started/integration
+
+This example shows how to import Chart.js in a CommonJS environment using dynamic import. Since Chart.js is an ESM library, a dynamic import is necessary to load it within a CommonJS module. This method is asynchronous.
+
+```javascript
+const { Chart } = await import("chart.js");
+```
+
+---
+
+### Configure Chart.js Pie Chart
+
+Source: https://www.chartjs.org/docs/latest/samples/other-charts/pie
+
+Defines the configuration object for a Chart.js pie chart. It sets the chart type, data source, and various options for responsiveness, legend, and title. Assumes a 'data' object is defined elsewhere.
+
+```javascript
+const config = {
+    type: "pie",
+    data: data,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: "top",
+            },
+            title: {
+                display: true,
+                text: "Chart.js Pie Chart",
+            },
+        },
+    },
+};
+```
+
+---
+
+### Include Chart.js with a Script Tag
+
+Source: https://www.chartjs.org/docs/latest/getting-started/integration
+
+This method demonstrates how to include Chart.js in a web page using a simple script tag. It's suitable for basic implementations where module bundling is not used. No external dependencies are required beyond the Chart.js library itself.
+
+```html
+<script src="path/to/chartjs/dist/chart.umd.min.js"></script>
+<script>
+    const myChart = new Chart(ctx, {...});
+</script>
+```
+
+---
+
+### Configure Radar Chart with Plugins and Interaction
+
+Source: https://www.chartjs.org/docs/latest/samples/area/radar
+
+Defines the configuration for a radar chart, specifying its type, data source, and options for plugins like 'filler' and 'samples-filler-analyser'. It also sets interaction properties.
+
+```javascript
+const config = {
+    type: "radar",
+    data: data,
+    options: {
+        plugins: {
+            filler: {
+                propagate: false,
+            },
+            "samples-filler-analyser": {
+                target: "chart-analyser",
+            },
+        },
+        interaction: {
+            intersect: false,
+        },
+    },
+};
+```
+
+---
+
+### Configure Chart.js Line Chart with Point Styling
+
+Source: https://www.chartjs.org/docs/latest/samples/line/point-styling
+
+Sets up the configuration for a Chart.js line chart, enabling responsiveness and displaying a title that dynamically shows the current point style. This code defines the chart's type, data, and options, including plugin configurations for the title.
+
+```javascript
+const config = {
+    type: "line",
+    data: data,
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: (ctx) =>
+                    "Point Style: " + ctx.chart.data.datasets[0].pointStyle,
+            },
+        },
+    },
+};
+```
+
+---
+
+### Chart.js Floating Bar Chart Configuration
+
+Source: https://www.chartjs.org/docs/latest/samples/bar/floating
+
+Defines the configuration for a Chart.js bar chart, setting it to be responsive and adding a title. The 'data' object is expected to be populated separately.
+
+```javascript
+const config = {
+    type: "bar",
+    data: data,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: "top",
+            },
+            title: {
+                display: true,
+                text: "Chart.js Floating Bar Chart",
+            },
+        },
+    },
+};
+```
+
+---
+
+### Chart.js Line Chart Configuration
+
+Source: https://www.chartjs.org/docs/latest/samples/area/line-drawtime
+
+Sets up the configuration for a Chart.js line chart, including chart type, data, and options. It specifically configures the filler plugin's `drawTime` and title display, along with point styling and interaction.
+
+```javascript
+const config = {
+    type: "line",
+    data: data,
+    options: {
+        plugins: {
+            filler: {
+                propagate: false,
+            },
+            title: {
+                display: true,
+                text: (ctx) =>
+                    "drawTime: " + ctx.chart.options.plugins.filler.drawTime,
+            },
+        },
+        pointBackgroundColor: "#fff",
+        radius: 10,
+        interaction: {
+            intersect: false,
+        },
+    },
+};
+```
+
+---
+
+### Chart.js Line Chart Data Configuration
+
+Source: https://www.chartjs.org/docs/latest/samples/area/line-drawtime
+
+Defines the data structure for a Chart.js line chart, including labels and datasets with styling. It relies on utility functions `generateLabels` and `generateData` for populating the chart.
+
+```javascript
+const data = {
+    labels: generateLabels(),
+    datasets: [
+        {
+            label: "Dataset 1",
+            data: generateData(),
+            borderColor: Utils.CHART_COLORS.red,
+            backgroundColor: Utils.CHART_COLORS.red,
+            fill: true,
+        },
+        {
+            label: "Dataset 2",
+            data: generateData(),
+            borderColor: Utils.CHART_COLORS.blue,
+            backgroundColor: Utils.transparentize(Utils.CHART_COLORS.blue),
+            fill: true,
+        },
+    ],
+};
+```
+
+---
+
+### Configure Chart.js Line Chart Options
+
+Source: https://www.chartjs.org/docs/latest/samples/advanced/linear-gradient
+
+This configuration object sets up a line chart in Chart.js. It includes options for responsiveness and plugin configurations, specifically for the legend position. The 'data' object is a placeholder for actual data.
+
+```javascript
+const config = {
+    type: "line",
+    data: data,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: "top",
+            },
+        },
+    },
+};
+```
+
+---
+
+### Chart.js Radar Chart Configuration
+
+Source: https://www.chartjs.org/docs/latest/samples/other-charts/radar-skip-points
+
+Defines the configuration object for a Chart.js radar chart. It specifies the chart type, data, and options such as responsiveness and a title. This configuration is fundamental for rendering the radar chart.
+
+```javascript
+const config = {
+    type: "radar",
+    data: data,
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: "Chart.js Radar Skip Points Chart",
+            },
+        },
+    },
+};
+```
+
+---
+
+### Chart.js Set Tick Step Size Example
+
+Source: https://www.chartjs.org/docs/latest/axes/cartesian/linear
+
+Demonstrates how to configure a Chart.js scale to display ticks at fixed intervals using the 'stepSize' option. This example sets up a y-axis with ticks enumerated by multiples of 0.5, ranging from 0 to 5.
+
+```javascript
+let options = {
+    scales: {
+        y: {
+            max: 5,
+            min: 0,
+            ticks: {
+                stepSize: 0.5,
+            },
+        },
+    },
+};
+```
+
+---
+
+### Chart.js v3 Plugin Registration
+
+Source: https://www.chartjs.org/docs/latest/getting-started/v3-migration
+
+In Chart.js v3, `Chart.plugins.register` has been replaced by `Chart.register`. Plugin defaults are now located in `Chart.defaults.plugins[id]`, and the `Chart.registry` object replaces `Chart.scaleService` and `Chart.plugins` for managing plugins.
+
+```javascript
+// Registering a plugin in Chart.js v3
+// import { plugin } from 'chart.js';
+// Chart.register(plugin);
+```
+
+---
+
+### Configure Chart.js Bar/Line Combo Chart
+
+Source: https://www.chartjs.org/docs/latest/samples/other-charts/combo-bar-line
+
+Defines the configuration object for a Chart.js chart, specifying the chart type as 'bar' and setting up responsive options, legend position, and a chart title. This configuration is essential for initializing the chart.
+
+```javascript
+const config = {
+    type: "bar",
+    data: data,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: "top",
+            },
+            title: {
+                display: true,
+                text: "Chart.js Combined Line/Bar Chart",
+            },
+        },
+    },
+};
+```
+
+---
+
+### Define Chart.js Data with Point Style Options (JavaScript)
+
+Source: https://www.chartjs.org/docs/latest/samples/legend/point-style
+
+Defines the data structure for a Chart.js line chart, including specific point style configurations. This includes setting `pointStyle`, `pointRadius`, and `pointBorderColor` for individual datasets. It relies on a `Utils` object for generating sample data and colors, which is common in Chart.js examples.
+
+```javascript
+const DATA_COUNT = 7;
+const NUMBER_CFG = { count: DATA_COUNT, min: -100, max: 100 };
+const data = {
+    labels: Utils.months({ count: DATA_COUNT }),
+    datasets: [
+        {
+            label: "Dataset 1",
+            data: Utils.numbers(NUMBER_CFG),
+            fill: false,
+            borderColor: Utils.CHART_COLORS.red,
+            backgroundColor: Utils.transparentize(Utils.CHART_COLORS.red, 0.5),
+            borderWidth: 1,
+            pointStyle: "rectRot",
+            pointRadius: 5,
+            pointBorderColor: "rgb(0, 0, 0)",
+        },
+    ],
+};
+```
+
+---
+
+### Generate Radar Chart Data and Labels
+
+Source: https://www.chartjs.org/docs/latest/samples/area/radar
+
+Sets up input parameters for data generation and defines functions to create labels and dataset values for the chart. It constructs the 'data' object with multiple datasets, each having specific styling and fill properties.
+
+```javascript
+const inputs = {
+    min: 8,
+    max: 16,
+    count: 8,
+    decimals: 2,
+    continuity: 1,
+};
+
+const generateLabels = () => {
+    return Utils.months({ count: inputs.count });
+};
+
+const generateData = () => {
+    const values = Utils.numbers(inputs);
+    inputs.from = values;
+    return values;
+};
+
+const labels = Utils.months({ count: 8 });
+const data = {
+    labels: generateLabels(),
+    datasets: [
+        {
+            label: "D0",
+            data: generateData(),
+            borderColor: Utils.CHART_COLORS.red,
+            backgroundColor: Utils.transparentize(Utils.CHART_COLORS.red),
+        },
+        {
+            label: "D1",
+            data: generateData(),
+            borderColor: Utils.CHART_COLORS.orange,
+            hidden: true,
+            backgroundColor: Utils.transparentize(Utils.CHART_COLORS.orange),
+            fill: "-1",
+        },
+        {
+            label: "D2",
+            data: generateData(),
+            borderColor: Utils.CHART_COLORS.yellow,
+            backgroundColor: Utils.transparentize(Utils.CHART_COLORS.yellow),
+            fill: 1,
+        },
+        {
+            label: "D3",
+            data: generateData(),
+            borderColor: Utils.CHART_COLORS.green,
+            backgroundColor: Utils.transparentize(Utils.CHART_COLORS.green),
+            fill: false,
+        },
+        {
+            label: "D4",
+            data: generateData(),
+            borderColor: Utils.CHART_COLORS.blue,
+            backgroundColor: Utils.transparentize(Utils.CHART_COLORS.blue),
+            fill: "-1",
+        },
+        {
+            label: "D5",
+            data: generateData(),
+            borderColor: Utils.CHART_COLORS.purple,
+            backgroundColor: Utils.transparentize(Utils.CHART_COLORS.purple),
+            fill: "-1",
+        },
+        {
+            label: "D6",
+            data: generateData(),
+            borderColor: Utils.CHART_COLORS.grey,
+            backgroundColor: Utils.transparentize(Utils.CHART_COLORS.grey),
+            fill: { value: 85 },
+        },
+    ],
+};
+```
+
+---
+
+### Creating a Pattern Fill for Chart.js Dataset
+
+Source: https://www.chartjs.org/docs/latest/general/colors
+
+Shows how to use a `CanvasPattern` to fill a Chart.js dataset with an image. It involves loading an image, creating a pattern from it using the canvas context, and assigning this pattern to the `backgroundColor` of the dataset.
+
+```javascript
+const img = new Image();
+img.src = "https://example.com/my_image.png";
+img.onload = () => {
+    const ctx = document.getElementById("canvas").getContext("2d");
+    const fillPattern = ctx.createPattern(img, "repeat");
+
+    const chart = new Chart(ctx, {
+        data: {
+            labels: ["Item 1", "Item 2", "Item 3"],
+            datasets: [
+                {
+                    data: [10, 20, 30],
+                    backgroundColor: fillPattern,
+                },
+            ],
+        },
+    });
+};
+```
+
+---
+
+### Registering Chart.js Components in JavaScript
+
+Source: https://www.chartjs.org/docs/latest/getting-started/v3-migration
+
+Demonstrates how to import and register specific Chart.js controllers, elements, scales, and plugins for tree-shaking benefits. This approach is recommended for npm module usage to optimize bundle size. It requires explicitly registering all components used in the chart.
+
+```javascript
+import { Chart, LineController, LineElement, PointElement, LinearScale, Title } from `chart.js`
+
+Chart.register(LineController, LineElement, PointElement, LinearScale, Title);
+
+const chart = new Chart(ctx, {
+    type: 'line',
+    // data: ...
+    options: {
+        plugins: {
+            title: {
+                display: true,
+                text: 'Chart Title'
+            }
+        },
+        scales: {
+            x: {
+                type: 'linear'
+            },
+            y: {
+                type: 'linear'
+            }
+        }
+    }
+})
+```
+
+---
+
+### Initialize Line Chart with Default Scales
+
+Source: https://www.chartjs.org/docs/latest/axes
+
+Creates a line chart instance with default 'x' and 'y' scales. This is the most basic setup for a cartesian chart.
+
+```javascript
+let chart = new Chart(ctx, {
+    type: "line",
+});
+```
+
+---
+
+### Configure Chart.js Line Chart with Two Datasets
+
+Source: https://www.chartjs.org/docs/latest/samples/animations/progressive-line
+
+Sets up a Chart.js line chart with two datasets, each defined by its border color, border width, and data points. It configures animation, interaction, legend, and the x-axis scale.
+
+```javascript
+const config = {
+    type: "line",
+    data: {
+        datasets: [
+            {
+                borderColor: Utils.CHART_COLORS.red,
+                borderWidth: 1,
+                radius: 0,
+                data: data,
+            },
+            {
+                borderColor: Utils.CHART_COLORS.blue,
+                borderWidth: 1,
+                radius: 0,
+                data: data2,
+            },
+        ],
+    },
+    options: {
+        animation,
+        interaction: {
+            intersect: false,
+        },
+        plugins: {
+            legend: false,
+        },
+        scales: {
+            x: {
+                type: "linear",
+            },
+        },
+    },
+};
+```
+
+---
+
+### Configure Radar Chart with Chart.js
+
+Source: https://www.chartjs.org/docs/latest/samples/other-charts/radar
+
+Defines the configuration object for a radar chart. It specifies the chart type, data, and responsive options, including a title for the chart. This code assumes a 'data' object is defined elsewhere.
+
+```javascript
+const config = {
+    type: "radar",
+    data: data,
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: "Chart.js Radar Chart",
+            },
+        },
+    },
+};
+```
+
+---
+
+### Define Chart.js Data Structure (JavaScript)
+
+Source: https://www.chartjs.org/docs/latest/samples/scales/linear-min-max-suggested
+
+Sets up the data structure for a Chart.js chart, including labels for the x-axis and datasets for the chart. Each dataset contains data points, line colors, and background colors. This data will be used with the chart configuration.
+
+```javascript
+const DATA_COUNT = 7;
+const NUMBER_CFG = {
+    count: DATA_COUNT,
+    min: 0,
+    max: 100,
+};
+
+const labels = Utils.months({
+    count: 7,
+});
+const data = {
+    labels: labels,
+    datasets: [
+        {
+            label: "Dataset 1",
+            data: [10, 30, 39, 20, 25, 34, -10],
+            borderColor: Utils.CHART_COLORS.red,
+            backgroundColor: Utils.CHART_COLORS.red,
+        },
+        {
+            label: "Dataset 2",
+            data: [18, 33, 22, 19, 11, 39, 30],
+            borderColor: Utils.CHART_COLORS.blue,
+            backgroundColor: Utils.CHART_COLORS.blue,
+        },
+    ],
+};
+```
+
+---
+
+### Define Chart.js Line Chart Data with Point Styling
+
+Source: https://www.chartjs.org/docs/latest/samples/line/point-styling
+
+Defines the data structure for a Chart.js line chart, including labels, datasets, and specific styling for points. This example sets the pointStyle to 'circle', along with radius and hover radius for visual emphasis. It utilizes utility functions for generating random numbers and color manipulation.
+
+```javascript
+const data = {
+    labels: ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6"],
+    datasets: [
+        {
+            label: "Dataset",
+            data: Utils.numbers({ count: 6, min: -100, max: 100 }),
+            borderColor: Utils.CHART_COLORS.red,
+            backgroundColor: Utils.transparentize(Utils.CHART_COLORS.red, 0.5),
+            pointStyle: "circle",
+            pointRadius: 10,
+            pointHoverRadius: 15,
+        },
+    ],
+};
+```
+
+---
+
+### Configure Project as ES Module (JSON)
+
+Source: https://www.chartjs.org/docs/latest/migration/v4-migration
+
+To use Chart.js 4.x, your project must be configured as an ES module. This JSON snippet shows the necessary addition to your package.json file to enable ES module support.
+
+```json
+{
+    "type": "module"
+}
+```
+
+---
+
+### Using Patternomaly for Chart.js Dataset Fills
+
+Source: https://www.chartjs.org/docs/latest/general/colors
+
+Illustrates how to use the Patternomaly library to generate different pattern fills for Chart.js datasets. Each dataset can be assigned a unique pattern created using `pattern.draw()` with a shape and color.
+
+```javascript
+const chartData = {
+    datasets: [
+        {
+            data: [45, 25, 20, 10],
+            backgroundColor: [
+                pattern.draw("square", "#ff6384"),
+                pattern.draw("circle", "#36a2eb"),
+                pattern.draw("diamond", "#cc65fe"),
+                pattern.draw("triangle", "#ffce56"),
+            ],
+        },
+    ],
+    labels: ["Red", "Blue", "Purple", "Yellow"],
+};
+```
+
+---
+
+### Configure Chart.js Bubble Chart
+
+Source: https://www.chartjs.org/docs/latest/samples/other-charts/bubble
+
+Defines the configuration object for a Chart.js bubble chart. It specifies the chart type, data, and responsive options, including legend and title plugins. Dependencies include a 'data' object and Chart.js library.
+
+```javascript
+const config = {
+    type: "bubble",
+    data: data,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: "top",
+            },
+            title: {
+                display: true,
+                text: "Chart.js Bubble Chart",
+            },
+        },
+    },
+};
+```
+
+---
+
+### Configure Stacked Line Chart (JavaScript)
+
+Source: https://www.chartjs.org/docs/latest/samples/area/line-stacked
+
+Defines the configuration object for a stacked line chart in Chart.js. It includes options for responsiveness, titles, tooltips, interaction, and scale configurations. The y-axis is set to be stacked, and titles are provided for both axes.
+
+```javascript
+const config = {
+    type: "line",
+    data: data,
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: (ctx) =>
+                    "Chart.js Line Chart - stacked=" +
+                    ctx.chart.options.scales.y.stacked,
+            },
+            tooltip: {
+                mode: "index",
+            },
+        },
+        interaction: {
+            mode: "nearest",
+            axis: "x",
+            intersect: false,
+        },
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: "Month",
+                },
+            },
+            y: {
+                stacked: true,
+                title: {
+                    display: true,
+                    text: "Value",
+                },
+            },
+        },
+    },
+};
+```
+
+---
+
+### Disabling the Chart.js Colors Plugin
+
+Source: https://www.chartjs.org/docs/latest/general/colors
+
+Provides an example of how to disable the `Colors` plugin in Chart.js by setting the `enabled` option to `false` within the plugin configuration. This is relevant for UMD builds where the plugin might be enabled by default.
+
+```javascript
+const options = {
+    plugins: {
+        colors: {
+            enabled: false,
+        },
+    },
+};
+```
+
+---
+
+### Generate Pie Chart Data (JavaScript)
+
+Source: https://www.chartjs.org/docs/latest/samples/scriptable/pie
+
+Provides a function to generate random numerical data for chart datasets. It relies on a global 'Utils.numbers' function for data generation. The generated data is then structured into a Chart.js dataset format.
+
+```javascript
+function generateData() {
+    return Utils.numbers({
+        count: DATA_COUNT,
+        min: -100,
+        max: 100,
+    });
+}
+
+const data = {
+    datasets: [
+        {
+            data: generateData(),
+        },
+    ],
+};
+```
+
+---
+
+### Node.js Chart Generation with Chart.js and Skia-Canvas
+
+Source: https://www.chartjs.org/docs/latest/getting-started/using-from-node-js
+
+Demonstrates server-side chart generation using Chart.js in a Node.js environment with the skia-canvas package. It shows how to import necessary Chart.js components, create a canvas, render a line chart, save it as a PNG, and clean up the chart instance. Requires 'chart.js' and 'skia-canvas' NPM packages.
+
+```javascript
+import {
+    CategoryScale,
+    Chart,
+    LinearScale,
+    LineController,
+    LineElement,
+    PointElement,
+} from "chart.js";
+import { Canvas } from "skia-canvas";
+import fsp from "node:fs/promises";
+
+Chart.register([
+    CategoryScale,
+    LineController,
+    LineElement,
+    LinearScale,
+    PointElement,
+]);
+
+const canvas = new Canvas(400, 300);
+const chart = new Chart(
+    canvas, // TypeScript needs "as any" here
+    {
+        type: "line",
+        data: {
+            labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
+            datasets: [
+                {
+                    label: "# of Votes",
+                    data: [12, 19, 3, 5, 2, 3],
+                    borderColor: "red",
+                },
+            ],
+        },
+    }
+);
+const pngBuffer = await canvas.toBuffer("png", { matte: "white" });
+await fsp.writeFile("output.png", pngBuffer);
+chart.destroy();
+```
+
+---
+
+### Indexable Options Example - Chart.js
+
+Source: https://www.chartjs.org/docs/latest/general/options
+
+Illustrates the use of indexable options in Chart.js, where an array of values can be provided. Each item in the array corresponds to an element at the same index in the data. If the array has fewer items than data points, the items are looped.
+
+```javascript
+color: ["red", "blue", "green", "black"];
+```
+
+---
+
+### Generate Data for Chart.js Combo Chart
+
+Source: https://www.chartjs.org/docs/latest/samples/scales/time-combo
+
+Creates sample data for a Chart.js combo chart, including labels based on dates and multiple datasets of type 'bar' and 'line'. The `Utils` object is assumed to provide helper functions for data generation and color manipulation.
+
+```javascript
+const DATA_COUNT = 7;
+const NUMBER_CFG = { count: DATA_COUNT, min: 0, max: 100 };
+
+const labels = [];
+
+for (let i = 0; i < DATA_COUNT; ++i) {
+    labels.push(Utils.newDate(i));
+}
+
+const data = {
+    labels: labels,
+    datasets: [
+        {
+            type: "bar",
+            label: "Dataset 1",
+            backgroundColor: Utils.transparentize(Utils.CHART_COLORS.red, 0.5),
+            borderColor: Utils.CHART_COLORS.red,
+            data: Utils.numbers(NUMBER_CFG),
+        },
+        {
+            type: "bar",
+            label: "Dataset 2",
+            backgroundColor: Utils.transparentize(Utils.CHART_COLORS.blue, 0.5),
+            borderColor: Utils.CHART_COLORS.blue,
+            data: Utils.numbers(NUMBER_CFG),
+        },
+        {
+            type: "line",
+            label: "Dataset 3",
+            backgroundColor: Utils.transparentize(
+                Utils.CHART_COLORS.green,
+                0.5
+            ),
+            borderColor: Utils.CHART_COLORS.green,
+            fill: false,
+            data: Utils.numbers(NUMBER_CFG),
+        },
+    ],
+};
+```
+
+---
+
+### Convert Event to Data Coordinates in JavaScript
+
+Source: https://www.chartjs.org/docs/latest/configuration/interactions
+
+This example demonstrates how to convert a click event's canvas coordinates into data values for the chart's scales. It uses `Chart.helpers.getRelativePosition` to get canvas coordinates and then `chart.scales.x.getValueForPixel` and `chart.scales.y.getValueForPixel` to find the corresponding data x and y values.
+
+```javascript
+const chart = new Chart(ctx, {
+    type: "line",
+    data: data,
+    options: {
+        onClick: (e) => {
+            const canvasPosition = Chart.helpers.getRelativePosition(e, chart);
+
+            // Substitute the appropriate scale IDs
+            const dataX = chart.scales.x.getValueForPixel(canvasPosition.x);
+            const dataY = chart.scales.y.getValueForPixel(canvasPosition.y);
+        },
+    },
+});
+```
+
+---
+
+### init
+
+Source: https://www.chartjs.org/docs/latest/api/interfaces/RadialLinearScale
+
+Initializes the chart or scale with provided options.
+
+````APIDOC
+## POST /websites/chartjs/init
+
+### Description
+Initializes the chart or scale with provided options.
+
+### Method
+POST
+
+### Endpoint
+/websites/chartjs/init
+
+### Parameters
+#### Request Body
+- **options** (Object) - Required - The configuration options for initialization.
+
+### Response
+#### Success Response (200)
+- **status** (string) - Indicates successful initialization.
+
+#### Response Example
+```json
+{
+  "status": "initialized"
+}
+````
+
+````
+
+--------------------------------
+
+### Chart.js Data Generation for Bar Chart
+
+Source: https://www.chartjs.org/docs/latest/samples/scriptable/bar
+
+Generates sample data for a Chart.js bar chart. It creates an array of random numbers for the dataset values and corresponding month labels. Assumes 'DATA_COUNT' is defined.
+
+```javascript
+function generateData() {
+  return Utils.numbers({
+    count: DATA_COUNT,
+    min: -100,
+    max: 100
+  });
+}
+
+const data = {
+  labels: Utils.months({count: DATA_COUNT}),
+  datasets: [{
+    data: generateData(),
+  }]
+};
+````
+
+---
+
+### Pie Chart Data Structure Example (JavaScript)
+
+Source: https://www.chartjs.org/docs/latest/charts/doughnut
+
+Demonstrates the required data structure for creating a Pie chart. It includes an array of datasets, where each dataset contains the actual data points. Labels are also provided for tooltips and the legend. This structure is fundamental for rendering the chart correctly.
+
+```javascript
+data = {
+    datasets: [
+        {
+            data: [10, 20, 30],
+        },
+    ],
+
+    // These labels appear in the legend and in the tooltips when hovering different arcs
+    labels: ["Red", "Yellow", "Blue"],
+};
+```
+
+---
+
+### Define Data for Chart.js Pie Chart (JavaScript)
+
+Source: https://www.chartjs.org/docs/latest/samples/legend/events
+
+This snippet defines the data structure for a Chart.js pie chart. It includes labels for the segments and datasets containing the values and corresponding background colors for each segment.
+
+```javascript
+const data = {
+    labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
+    datasets: [
+        {
+            label: "# of Votes",
+            data: [12, 19, 3, 5, 2, 3],
+            borderWidth: 1,
+            backgroundColor: [
+                "#CB4335",
+                "#1F618D",
+                "#F1C40F",
+                "#27AE60",
+                "#884EA0",
+                "#D35400",
+            ],
+        },
+    ],
+};
+```
+
+---
+
+### Configure Chart.js Doughnut Chart
+
+Source: https://www.chartjs.org/docs/latest/samples/other-charts/doughnut
+
+Defines the configuration for a Chart.js doughnut chart. It specifies the chart type, data source, and options for responsiveness, legend position, and a title. This is a fundamental setup for any doughnut chart.
+
+```javascript
+const config = {
+    type: "doughnut",
+    data: data,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: "top",
+            },
+            title: {
+                display: true,
+                text: "Chart.js Doughnut Chart",
+            },
+        },
+    },
+};
+```
+
+---
+
+### DatasetController Class Documentation
+
+Source: https://www.chartjs.org/docs/latest/api/classes/DatasetController
+
+This section details the DatasetController class, its type parameters, constructor, properties, and available methods.
+
+```APIDOC
+## Class: DatasetController<TType, TElement, TDatasetElement, TParsedData>
+
+### Type Parameters
+
+- `TType`: Extends `ChartType` (default: `ChartType`)
+- `TElement`: Extends `Element` (default: `Element`)
+- `TDatasetElement`: Extends `Element` (default: `Element`)
+- `TParsedData`: Represents `ParsedDataType`<`TType`>
+
+### Hierarchy
+
+- **`DatasetController`**
+  - `DoughnutController`
+
+## Constructors
+
+### constructor
+
+`new DatasetController<TType, TElement, TDatasetElement, TParsedData>(chart, datasetIndex)`
+
+#### Type Parameters
+
+- `TType`: Extends `keyof ChartTypeRegistry` (default: `keyof ChartTypeRegistry`)
+- `TElement`: Extends `default<AnyObject, AnyObject, TElement>` (default: `default<AnyObject, AnyObject>`)
+- `TDatasetElement`: Extends `default<AnyObject, AnyObject, TDatasetElement>` (default: `default<AnyObject, AnyObject>`)
+- `TParsedData`: Represents `ParsedDataType`<`TType`>
+
+#### Parameters
+
+- `chart` (Chart): The Chart instance.
+- `datasetIndex` (number): The index of the dataset.
+
+#### Defined in
+
+types/index.d.ts:598
+
+## Properties
+
+### _cachedMeta
+
+- `_cachedMeta` (Readonly): `ChartMeta`<`TType`, `TElement`, `TDatasetElement`>
+
+#### Defined in
+
+types/index.d.ts:602
+
+### chart
+
+- `chart` (Readonly): `Chart`<keyof `ChartTypeRegistry`, (`number` | [`number`, `number`] | `Point` | `BubbleDataPoint`)[], `unknown`>
+
+#### Defined in
+
+types/index.d.ts:600
+
+### enableOptionSharing
+
+- `enableOptionSharing` (boolean)
+
+#### Defined in
+
+types/index.d.ts:603
+
+### index
+
+- `index` (Readonly): `number`
+
+#### Defined in
+
+types/index.d.ts:601
+
+### supportsDecimation
+
+- `supportsDecimation` (boolean)
+
+#### Defined in
+
+types/index.d.ts:607
+
+## Methods
+
+### addElements
+
+`addElements()`: `void`
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+types/index.d.ts:623
+
+### applyStack
+
+`Protected applyStack(scale, parsed)`: `number`
+
+#### Parameters
+
+- `scale` (Scale): The scale to apply the stack to.
+- `parsed` (unknown[]): The parsed data.
+
+#### Returns
+
+`number`
+
+#### Defined in
+
+types/index.d.ts:659
+
+### buildOrUpdateElements
+
+`buildOrUpdateElements(resetNewElements?)`: `void`
+
+#### Parameters
+
+- `resetNewElements` (boolean, optional): Whether to reset new elements.
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+types/index.d.ts:624
+
+### configure
+
+`configure()`: `void`
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+types/index.d.ts:621
+
+### draw
+
+`draw()`: `void`
+
+#### Returns
+
+`void`
+
+#### Defined in
+
+types/index.d.ts:616
+
+### getAllParsedValues
+
+`getAllParsedValues(scale)`: `number`[]
+
+#### Parameters
+
+- `scale` (Scale): The scale for which to get parsed values.
+
+#### Returns
+
+`number`[]
+
+#### Defined in
+
+types/index.d.ts:610
+
+### getDataset
+
+`getDataset()`: `ChartDataset`<keyof `ChartTypeRegistry`, (`number` | [`number`, `number`] | `Point` | `BubbleDataPoint`)[]>
+
+#### Returns
+
+`ChartDataset`<keyof `ChartTypeRegistry`, (`number` | [`number`, `number`] | `Point` | `BubbleDataPoint`)[]>
+
+#### Defined in
+
+types/index.d.ts:618
+
+### getLabelAndValue
+
+`Protected getLabelAndValue(index)`: `Object`
+
+#### Parameters
+
+- `index` (number): The index of the data point.
+
+#### Returns
+
+`Object` with properties:
+- `label` (string): The label for the data point.
+- `value` (string): The value for the data point.
+
+#### Defined in
+
+types/index.d.ts:611
+
+### getMaxOverflow
+
+`Protected getMaxOverflow()`: `number` | `boolean`
+
+#### Returns
+
+`number` | `boolean`
+
+#### Defined in
+
+types/index.d.ts:615
+
+### getMeta
+
+`getMeta()`: `ChartMeta`<`TType`, `TElement`, `TDatasetElement`>
+
+#### Returns
+
+`ChartMeta`<`TType`, `TElement`, `TDatasetElement`>
+
+#### Defined in
+
+types/index.d.ts:619
+
+### getMinMax
+
+`Protected getMinMax(scale, canStack?)`: `Object`
+
+#### Parameters
+
+- `scale` (Scale): The scale to get min/max values from.
+- `canStack` (boolean, optional): Whether stacking is enabled.
+
+#### Returns
+
+`Object` with properties:
+- `max` (number): The maximum value.
+- `min` (number): The minimum value.
+
+#### Defined in
+
+types/index.d.ts:666
+
+### getParsed
+
+`Protected getParsed(index)`: `TParsedData`
+
+#### Parameters
+
+- `index` (number): The index of the data point.
+
+#### Returns
+
+`TParsedData`
+
+#### Defined in
+
+types/index.d.ts:658
+
+### getScaleForId
+
+`getScaleForId(scaleID)`: `Scale`<`CoreScaleOptions`>
+
+#### Parameters
+
+- `scaleID` (string): The ID of the scale.
+
+#### Returns
+
+`Scale`<`CoreScaleOptions`>
+
+#### Defined in
+
+types/index.d.ts:620
+
+```
