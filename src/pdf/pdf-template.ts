@@ -87,3 +87,4 @@ export const todoListTemplate: Template = {
         ],
     ],
 };
+

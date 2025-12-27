@@ -22,6 +22,10 @@ export type Todo = {
     completed: boolean;
 };
 
+export type PdfWorkerPayload = {
+    todos: Todo[];
+};
+
 /**
  * Generates a line chart image using Chart.js and skia-canvas
  * @returns Base64 data URL of the chart image
@@ -67,14 +71,15 @@ async function generateChartImage(): Promise<string> {
     ctx.scale(resolutionMultiplier, resolutionMultiplier);
 
     // Hard-coded chart data
+    const labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
     const chartConfig = {
         type: "line" as const,
         data: {
-            labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+            labels: labels,
             datasets: [
                 {
                     label: "Completed Todos",
-                    data: [12, 19, 15, 25, 22, 30],
+                    data: [1200, 1900, 2500, 3200, 4100, 5500],
                     borderColor: "rgb(75, 192, 192)",
                     backgroundColor: "rgba(75, 192, 192, 0.2)",
                     tension: 0.1,
@@ -82,7 +87,7 @@ async function generateChartImage(): Promise<string> {
                 },
                 {
                     label: "Pending Todos",
-                    data: [8, 12, 10, 15, 18, 20],
+                    data: [800, 1200, 1500, 1800, 2200, 2800],
                     borderColor: "rgb(255, 99, 132)",
                     backgroundColor: "rgba(255, 99, 132, 0.2)",
                     tension: 0.1,
@@ -98,12 +103,12 @@ async function generateChartImage(): Promise<string> {
             transitions: {
                 active: {
                     animation: {
-                        duration: 0, // Disable transitions
+                        duration: 0,
                     },
                 },
             },
             interaction: {
-                intersect: false, // No user interaction
+                intersect: false,
                 mode: "nearest" as const,
             },
             devicePixelRatio: resolutionMultiplier, // Higher DPR for sharper rendering
@@ -112,7 +117,7 @@ async function generateChartImage(): Promise<string> {
                     display: true,
                     text: "Todo Completion Trends",
                     font: {
-                        size: 40, // Double size title font
+                        size: 40,
                     },
                 },
                 legend: {
@@ -120,12 +125,12 @@ async function generateChartImage(): Promise<string> {
                     position: "top" as const,
                     labels: {
                         font: {
-                            size: 28, // Double size legend font
+                            size: 28,
                         },
                     },
                 },
                 tooltip: {
-                    enabled: false, // No tooltips needed for static image
+                    enabled: false,
                 },
             },
             scales: {
@@ -133,28 +138,54 @@ async function generateChartImage(): Promise<string> {
                     beginAtZero: true,
                     ticks: {
                         font: {
-                            size: 28, // Double size font for Y-axis values
+                            size: 28,
+                        },
+                        callback: function (value: number | string): string {
+                            const numValue =
+                                typeof value === "string"
+                                    ? parseFloat(value)
+                                    : value;
+
+                            if (numValue >= 1000000) {
+                                return (numValue / 1000000).toFixed(1) + "M";
+                            } else if (numValue >= 1000) {
+                                return (numValue / 1000).toFixed(1) + "k";
+                            } else {
+                                return numValue.toString();
+                            }
                         },
                     },
                     title: {
                         display: true,
                         text: "Number of Todos",
                         font: {
-                            size: 32, // Double size font for Y-axis title
+                            size: 32,
                         },
                     },
                 },
                 x: {
                     ticks: {
                         font: {
-                            size: 28, // Double size font for X-axis values
+                            size: 28,
+                        },
+                        callback: function (value: string | number): string {
+                            const index =
+                                typeof value === "number"
+                                    ? value
+                                    : parseInt(value);
+                            const label = labels[index] || String(value);
+                            const currentYear = new Date()
+                                .getFullYear()
+                                .toString()
+                                .slice(-2);
+                            return label + " " + currentYear;
                         },
                     },
                     title: {
                         display: true,
                         text: "Month",
                         font: {
-                            size: 32, // Double size font for X-axis title
+                            size: 32,
                         },
                     },
                 },
@@ -162,15 +193,7 @@ async function generateChartImage(): Promise<string> {
         },
     };
 
-    // Create Chart.js instance
-    // Note: skia-canvas context is compatible with Chart.js but TypeScript types don't match exactly
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const chart = new Chart(ctx as any, chartConfig);
-
-    // Wait for chart to render (Chart.js needs time to draw)
-    await new Promise<void>((resolve: () => void): void => {
-        setTimeout(resolve, 200);
-    });
+    const chart = new Chart(ctx, chartConfig);
 
     // Convert canvas to base64 data URL
     // PNG export uses best quality by default in skia-canvas
@@ -184,7 +207,15 @@ async function generateChartImage(): Promise<string> {
     return dataUrl;
 }
 
-export async function generateTodoPdf(todos: Todo[]): Promise<Uint8Array> {
+/**
+ * Piscina worker function - generates PDF from todos
+ * Must be exported as default async function for Piscina compatibility
+ */
+export default async function generatePdfWorker(
+    payload: PdfWorkerPayload
+): Promise<Buffer> {
+    const { todos } = payload;
+
     // Format table data
     const tableData: string[][] = todos.map((todo: Todo): string[] => {
         return [
@@ -214,5 +245,6 @@ export async function generateTodoPdf(todos: Todo[]): Promise<Uint8Array> {
         },
     });
 
-    return pdf;
+    // Convert Uint8Array to Buffer for return
+    return Buffer.from(pdf);
 }
