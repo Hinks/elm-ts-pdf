@@ -30,6 +30,15 @@ app.get("/api", (_req: Request, res: Response): void => {
     res.json({ message: "hey from api" });
 });
 
+// Ping route - responds immediately to verify non-blocking behavior
+app.get("/ping", (_req: Request, res: Response): void => {
+    res.json({
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        message: "Server is responsive",
+    });
+});
+
 // PDF generation route - uses worker pool
 app.post("/pdf", (req: Request, res: Response): void => {
     void handlePdfRoute(req, res, pdfsDir);

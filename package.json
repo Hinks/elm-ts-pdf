@@ -12,7 +12,9 @@
         "dev": "tsx watch src/server/index.ts",
         "lint": "eslint src",
         "lint:fix": "eslint src --fix",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "test:pdf": "tsx src/scripts/test-pdf-generation.ts",
+        "test:ping": "bash -c 'SERVER_URL=${SERVER_URL:-http://localhost:3000} && while true; do curl -s $SERVER_URL/ping && echo \"\"; sleep 0.5; done'"
     },
     "author": "",
     "license": "ISC",
