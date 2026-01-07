@@ -22,10 +22,10 @@
         "@pdfme/common": "^5.5.7",
         "@pdfme/generator": "^5.5.7",
         "@pdfme/schemas": "^5.5.7",
+        "canvas": "^3.2.0",
         "chart.js": "^4.5.1",
         "express": "^5.1.0",
-        "piscina": "^5.1.4",
-        "skia-canvas": "^3.0.8"
+        "piscina": "^5.1.4"
     },
     "devDependencies": {
         "@types/express": "^5.0.5",

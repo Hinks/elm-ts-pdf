@@ -14,7 +14,7 @@ import {
     Legend,
     Filler,
 } from "chart.js";
-import { Canvas } from "skia-canvas";
+import { createCanvas } from "canvas";
 
 export type Todo = {
     id: number;
@@ -27,10 +27,10 @@ export type PdfWorkerPayload = {
 };
 
 /**
- * Generates a line chart image using Chart.js and skia-canvas
+ * Generates a line chart image using Chart.js and node-canvas
  * @returns Base64 data URL of the chart image
  */
-async function generateChartImage(): Promise<string> {
+function generateChartImage(): string {
     // Register Chart.js components
     Chart.register(
         LineController,
@@ -44,7 +44,7 @@ async function generateChartImage(): Promise<string> {
         Filler
     );
 
-    // Create canvas with skia-canvas
+    // Create canvas with node-canvas
     // Get PDF dimensions from template (chart area: 210mm width, 80mm height)
     // Convert mm to points, then to pixels for canvas
     const chartWidthMm = 210; // Full PDF width
@@ -63,7 +63,7 @@ async function generateChartImage(): Promise<string> {
     const chartWidthPx = baseWidthPx * resolutionMultiplier;
     const chartHeightPx = baseHeightPx * resolutionMultiplier;
 
-    const canvas = new Canvas(chartWidthPx, chartHeightPx);
+    const canvas = createCanvas(chartWidthPx, chartHeightPx);
     const ctx = canvas.getContext("2d");
 
     // Scale the context DOWN so Chart.js renders at the correct visual size
@@ -196,8 +196,8 @@ async function generateChartImage(): Promise<string> {
     const chart = new Chart(ctx, chartConfig);
 
     // Convert canvas to base64 data URL
-    // PNG export uses best quality by default in skia-canvas
-    const pngBuffer = await canvas.toBuffer("png");
+    // PNG export uses best quality by default in node-canvas
+    const pngBuffer = canvas.toBuffer("image/png");
     const base64Image = pngBuffer.toString("base64");
     const dataUrl = `data:image/png;base64,${base64Image}`;
 
@@ -226,7 +226,7 @@ export default async function generatePdfWorker(
     });
 
     // Generate chart image
-    const chartImage = await generateChartImage();
+    const chartImage = generateChartImage();
 
     // Generate PDF
     const pdf = await generate({
