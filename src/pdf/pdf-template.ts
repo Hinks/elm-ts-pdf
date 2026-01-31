@@ -88,3 +88,37 @@ export const todoListTemplate: Template = {
     ],
 };
 
+export const coverPageTemplate: Template = {
+    basePdf: {
+        width: 210,
+        height: 297,
+        padding: [10, 10, 10, 10],
+    },
+    schemas: [
+        [
+            {
+                name: "title",
+                type: "text",
+                position: { x: 20, y: 30 },
+                width: 170,
+                height: 20,
+                fontSize: 28,
+                fontName: "Helvetica",
+                alignment: "center",
+                verticalAlignment: "middle",
+            },
+            {
+                name: "description",
+                type: "text",
+                position: { x: 20, y: 60 },
+                width: 170,
+                height: 200,
+                fontSize: 12,
+                fontName: "Helvetica",
+                alignment: "left",
+                verticalAlignment: "top",
+            },
+        ],
+    ],
+};
+

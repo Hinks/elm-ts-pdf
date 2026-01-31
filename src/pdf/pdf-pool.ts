@@ -41,6 +41,7 @@ const pool = new Piscina<PdfWorkerPayload, Buffer>(poolOptions);
  */
 export async function generatePdf(payload: PdfWorkerPayload): Promise<Buffer> {
     try {
+        // All PDF generation (cover page, todo list, and merge) happens in worker thread
         const result = await pool.run(payload);
         return result;
     } catch (error) {

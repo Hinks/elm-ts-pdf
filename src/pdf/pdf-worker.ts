@@ -1,7 +1,17 @@
 import { generate } from "@pdfme/generator";
 import { text, table, image } from "@pdfme/schemas";
 import { mm2pt, pt2px } from "@pdfme/common";
-import { todoListTemplate } from "./pdf-template.js";
+import { createRequire } from "node:module";
+import { todoListTemplate, coverPageTemplate } from "./pdf-template.js";
+
+// Use createRequire to load CommonJS module in ESM context
+const require = createRequire(import.meta.url);
+// Merge cover page and todo list PDFs using require for CommonJS compatibility
+// @pdfme/manipulator internally uses @pdfme/pdf-lib which is CommonJS
+interface PdfMeManipulator {
+    merge: (pdfs: Uint8Array[]) => Promise<Uint8Array>;
+}
+const { merge } = require("@pdfme/manipulator") as PdfMeManipulator;
 import {
     Chart,
     LineController,
@@ -228,8 +238,23 @@ export default async function generatePdfWorker(
     // Generate chart image
     const chartImage = await generateChartImage();
 
-    // Generate PDF
-    const pdf = await generate({
+    // Generate cover page PDF
+    const coverPdf = await generate({
+        template: coverPageTemplate,
+        inputs: [
+            {
+                title: "Todo List Report",
+                description:
+                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+            },
+        ],
+        plugins: {
+            text,
+        },
+    });
+
+    // Generate todo list PDF
+    const todoPdf = await generate({
         template: todoListTemplate,
         inputs: [
             {
@@ -245,6 +270,8 @@ export default async function generatePdfWorker(
         },
     });
 
+    const mergedPdf = await merge([coverPdf, todoPdf]);
+
     // Convert Uint8Array to Buffer for return
-    return Buffer.from(pdf);
+    return Buffer.from(mergedPdf);
 }
